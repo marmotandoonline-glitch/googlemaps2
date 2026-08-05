@@ -1,0 +1,11 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// (schema content preserved)
+// full schema copied from prote11/projeto001/perfilgoge/prisma/schema.prisma
