@@ -1,0 +1,6 @@
+{
+  "name": "PerfilPro - Gestão de Perfis no Google",
+  "description": "Plataforma interna para agência de otimização de Perfis da Empresa no Google: Lead Finder, Scoring de Oportunidades, CRM Pipeline, Gerador de Propostas WhatsApp, Engine de Conteúdo com IA Gemini, Portal do Cliente e Relatórios de Desempenho.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
