@@ -56,15 +56,16 @@ model Lead {
   stage             String   @default("novo")
   dealValue         Int?     
   diagnostic        Json?
-  aiContent         Json?
+  aiContentMap      Json?
   clientPortalToken String?  @unique
   clientPortalData  Json?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  notes   LeadNote[]
-  history LeadHistory[]
-  files   File[]
+  notes             LeadNote[]
+  history           LeadHistory[]
+  files             File[]
+  aiContents        AIContent[]
 }
 
 model LeadNote {
@@ -77,14 +78,14 @@ model LeadNote {
 }
 
 model LeadHistory {
-  id        String   @id @default(cuid())
-  lead      Lead     @relation(fields: [leadId], references: [id])
-  leadId    String
-  type      String
+  id          String   @id @default(cuid())
+  lead        Lead     @relation(fields: [leadId], references: [id])
+  leadId      String
+  type        String
   description String
-  timestamp DateTime @default(now())
-  fromStage String?
-  toStage   String?
+  timestamp   DateTime @default(now())
+  fromStage   String?
+  toStage     String?
 }
 
 model PlaceCache {
@@ -95,14 +96,14 @@ model PlaceCache {
 }
 
 model AIJob {
-  id         String   @id @default(cuid())
-  leadId     String?
-  payload    Json
-  status     String   @default("queued")
-  result     Json?
-  attempts   Int      @default(0)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(cuid())
+  leadId    String?
+  payload   Json
+  status    String   @default("queued")
+  result    Json?
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model AIContent {
