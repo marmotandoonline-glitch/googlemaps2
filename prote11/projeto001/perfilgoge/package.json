@@ -16,6 +16,7 @@
   "dependencies": {
     "@google/genai": "^2.4.0",
     "@prisma/client": "^5.22.0",
+    "@tailwindcss/vite": "^4.1.14",
     "@types/cookie-parser": "^1.4.3",
     "aws-sdk": "^2.1352.0",
     "bcrypt": "^5.1.0",
