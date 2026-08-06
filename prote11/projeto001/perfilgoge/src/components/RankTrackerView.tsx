@@ -128,8 +128,22 @@ export const RankTrackerView: React.FC<RankTrackerViewProps> = ({ leads, selecte
         </form>
       </div>
 
+      {/* Loading & Empty States */}
+      {loading && (
+        <div className="p-12 text-center text-slate-500 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+          <RefreshCw size={32} className="animate-spin mx-auto text-rose-500" />
+          <p className="text-xs font-semibold">Executando varredura geográfica em grade (1km, 3km, 5km)...</p>
+        </div>
+      )}
+
+      {!loading && !gridData && (
+        <div className="p-12 text-center text-slate-500 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+          Clique em "Executar Grid Audit" para iniciar o monitoramento de ranking.
+        </div>
+      )}
+
       {/* Grid Results & Heatmap */}
-      {gridData && (
+      {!loading && gridData && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left 2 Cols: Heatmap Grid 3x3 */}
           <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
