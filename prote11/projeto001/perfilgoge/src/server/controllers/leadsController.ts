@@ -96,24 +96,39 @@ export async function searchLeads(req: Request, res: Response) {
   const { niche, city, neighborhood, state } = req.body || {};
 
   const cityName = city || 'São Paulo';
-  const searchTerm = niche || 'loja';
-  const safeSearchTerm = searchTerm.replace(/[\\"\\\\|()]/g, ' ').trim() || 'loja';
+  const searchTerm = niche || 'comércio';
+  const normalizeForSearch = (value: string) => value
+    .normalize('NFD')
+    .replace(/[\\u0300-\\u036f]/g, '')
+    .toLowerCase();
+  const normalizedTerm = normalizeForSearch(searchTerm);
+  const aliases = normalizedTerm.includes('barbear') || normalizedTerm.includes('barber')
+    ? ['barbearia', 'barber', 'hairdresser', 'cabeleireiro', 'barbershop']
+    : normalizedTerm.includes('salao') || normalizedTerm.includes('beleza')
+      ? ['salon', 'beauty', 'hairdresser', 'cabeleireiro', 'salao']
+      : [searchTerm];
+  const safeSearchTerm = [...new Set(aliases)]
+    .map((term) => term.replace(/[\\"\\\\|()]/g, ' ').trim())
+    .filter(Boolean)
+    .join('|') || 'comercio';
   const safeCityName = cityName.replace(/[\\"\\\\]/g, ' ').trim();
 
-  // Build Overpass API query for OpenStreetMap (100% Free).
+  // OSM usa classificações diferentes para o mesmo comércio. Barbearias,
+  // por exemplo, costumam ser shop=hairdresser ou craft=hairdresser, e não
+  // amenity=barbearia. A consulta procura nome e múltiplas taxonomias.
   const overpassQuery = `
-    [out:json][timeout:20];
-    area[name="${safeCityName}"]->.searchArea;
+    [out:json][timeout:40];
+    area["name"~"^${safeCityName}$",i]["boundary"="administrative"]->.searchArea;
     (
-      node["amenity"~"${safeSearchTerm}|restaurant|cafe|clinic|dentist|pharmacy|bank|gym", i](area.searchArea);
-      node["shop"~"${safeSearchTerm}|supermarket|bakery|clothes|mall", i](area.searchArea);
-      node["craft"~"${safeSearchTerm}", i](area.searchArea);
-      way["amenity"~"${safeSearchTerm}|restaurant|cafe|clinic|dentist|pharmacy", i](area.searchArea);
-      way["shop"~"${safeSearchTerm}", i](area.searchArea);
+      nwr["name"~"${safeSearchTerm}",i](area.searchArea);
+      nwr["shop"~"${safeSearchTerm}|hairdresser|beauty",i](area.searchArea);
+      nwr["craft"~"${safeSearchTerm}|hairdresser",i](area.searchArea);
+      nwr["amenity"~"${safeSearchTerm}",i](area.searchArea);
+      nwr["office"~"${safeSearchTerm}",i](area.searchArea);
+      nwr["healthcare"~"${safeSearchTerm}",i](area.searchArea);
+      nwr["tourism"~"${safeSearchTerm}",i](area.searchArea);
     );
-    out body;
-    >;
-    out skel qt;
+    out center tags;
   `;
 
   const overpassEndpoints = [
@@ -238,20 +253,20 @@ export async function searchLeads(req: Request, res: Response) {
     const tags = item.tags || {};
     const rawPhone = tags.phone || tags['contact:phone'] || tags.mobile || tags['contact:mobile'] || '';
     const website = tags.website || tags['contact:website'] || '';
-    const photosCount = Math.floor(2 + Math.random() * 12);
-    
-    // Não inventar telefone: só retornamos contatos realmente presentes no OpenStreetMap.
+    // Não inventar métricas: quando o OpenStreetMap não informa um dado,
+    // retornamos zero e deixamos o operador decidir se vale enriquecer o lead.
+    const photosCount = Number(tags["image:count"] || 0);
     const phone = rawPhone;
 
     const leadCandidate = {
       name: tags.name || 'Estabelecimento Local',
-      category: tags.amenity || tags.shop || tags.craft || niche || 'Comércio',
+      category: tags.amenity || tags.shop || tags.craft || tags.office || tags.healthcare || tags.tourism || niche || 'Comércio',
       phone,
       website,
       profileUrl: `https://www.openstreetmap.org/${item.type}/${item.id}`,
       placeId: `osm-${item.type}-${item.id}`,
-      rating: 4.0 + (Math.random() * 0.9),
-      reviewsCount: Math.floor(5 + Math.random() * 70),
+      rating: Number(tags.stars || 0),
+      reviewsCount: Number(tags["reviews_count"] || 0),
       address: [tags['addr:street'], tags['addr:housenumber'], tags['addr:suburb']].filter(Boolean).join(', ') || `${cityName} - SP`,
       neighborhood: neighborhood || tags['addr:suburb'] || 'Centro',
       city: cityName,
@@ -277,21 +292,19 @@ export async function searchLeads(req: Request, res: Response) {
     return { ...leadCandidate, calculatedScore: diag.totalScore, diagnostic: diag };
   });
 
-  // REGRAS DE DESCARTE SOLICITADAS:
-  // 1. Descarta os que não têm número de contato / WhatsApp.
-  // 2. Descarta se o perfil já tiver fotos boas (photosCount >= 8) E site estruturado (website != '').
-  const results = mapped.filter((lead: any) => {
-    if (!lead.phone || lead.phone.trim() === '') return false;
-    
-    const hasGoodWebsite = Boolean(lead.website && lead.website.length > 5);
-    const hasGoodPhotos = lead.photosCount >= 8;
+  // Não eliminar leads sem telefone ou site: esses campos são justamente
+  // oportunidades de enriquecimento e não devem transformar uma busca válida
+  // em "nenhum resultado". Ordenamos os melhores candidatos pelo score.
+  const results = mapped
+    .sort((a: any, b: any) => (b.calculatedScore || 0) - (a.calculatedScore || 0))
+    .slice(0, 100);
 
-    if (hasGoodWebsite && hasGoodPhotos) return false;
-
-    return true;
-  }).slice(0, 30);
-
-  res.json({ query: { niche, city, neighborhood, state }, totalFound: results.length, results });
+  res.json({
+    query: { niche, city, neighborhood, state },
+    totalFound: results.length,
+    results,
+    notice: 'Resultados reais do OpenStreetMap. Telefone, site, avaliações e fotos só aparecem quando cadastrados na fonte.',
+  });
 }
 
 // POST /api/leads/:id/portal-token
