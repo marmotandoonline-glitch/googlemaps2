@@ -7,6 +7,7 @@ import { aiRouter } from './routes/ai';
 import { portalRouter } from './routes/portal';
 import { authRouter } from './routes/auth';
 import { whatsappRouter } from './routes/whatsapp';
+import { rankTrackerRouter } from './routes/rankTracker';
 import { authMiddleware } from './middleware/authMiddleware';
 import express from 'express';
 import path from 'path';
@@ -77,6 +78,7 @@ app.use('/api/client-portal', portalRouter);
 app.use('/api/leads', authMiddleware, leadRouter);
 app.use('/api/ai', authMiddleware, aiRouter);
 app.use('/api/whatsapp', authMiddleware, whatsappRouter);
+app.use('/api/rank-tracker', authMiddleware, rankTrackerRouter);
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
