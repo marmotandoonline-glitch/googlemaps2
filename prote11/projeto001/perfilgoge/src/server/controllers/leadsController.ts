@@ -192,6 +192,7 @@ export async function searchLeads(req: Request, res: Response) {
 export async function getLeadById(req: Request, res: Response) {
   const { id } = req.params;
   const lead = await prisma.lead.findUnique({ where: { id }, include: { notes: true, history: true } });
+  // Note: The Prisma schema defines these as 'notes' and 'history' relations
   if (!lead) return res.status(404).json({ error: 'Lead not found' });
   res.json(lead);
 }

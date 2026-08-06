@@ -1,9 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { INITIAL_LEADS } from '../src/data/mockLeads';
 import bcrypt from 'bcrypt';
-
 const prisma = new PrismaClient();
-
 async function main() {
   console.log('Seeding mock leads...');
   for (const l of INITIAL_LEADS) {
@@ -32,13 +30,14 @@ async function main() {
         score: l.score || 0,
         stage: l.stage || 'novo',
         dealValue: l.dealValue || 1200,
+        estimatedLoss: 0,
+        financialExplanation: 'Análise financeira padrão',
         clientPortalToken: l.clientPortalToken,
         createdAt: new Date(l.createdAt),
         updatedAt: new Date(l.updatedAt),
       },
     });
   }
-
   // create default agency + admin user for dev
   const agencyName = 'PerfilPro Agência (Dev)';
   let agency = await prisma.agency.findFirst({ where: { name: agencyName } });
@@ -46,7 +45,6 @@ async function main() {
     agency = await prisma.agency.create({ data: { name: agencyName } });
     console.log('Created agency', agency.id);
   }
-
   const adminEmail = 'admin@perfilpro.com';
   const admin = await prisma.user.findUnique({ where: { email: adminEmail } });
   if (!admin) {
@@ -57,10 +55,8 @@ async function main() {
   } else {
     console.log('Admin user already exists');
   }
-
   console.log('Seeding completed.');
 }
-
 main()
   .catch((e) => {
     console.error(e);
