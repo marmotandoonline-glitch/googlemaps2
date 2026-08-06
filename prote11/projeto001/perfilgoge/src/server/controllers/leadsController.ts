@@ -139,9 +139,9 @@ export async function searchLeads(req: Request, res: Response) {
 
   let json: any = null;
   let lastError = 'Nenhum servidor Overpass respondeu.';
-  for (const url of overpassEndpoints) {
+  const overpassRequests = overpassEndpoints.map(async (url) => {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 12000);
+    const timeout = setTimeout(() => controller.abort(), 10000);
     try {
       const response = await fetch(url, {
         method: 'POST',
@@ -149,21 +149,19 @@ export async function searchLeads(req: Request, res: Response) {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         signal: controller.signal,
       });
-      if (!response.ok) {
-        lastError = `Servidor Overpass respondeu HTTP ${response.status}`;
-        continue;
-      }
+      if (!response.ok) throw new Error(`Servidor Overpass respondeu HTTP ${response.status}`);
       const candidate = await response.json() as any;
-      if (candidate && Array.isArray(candidate.elements)) {
-        json = candidate;
-        break;
-      }
-      lastError = 'Resposta inválida do servidor Overpass.';
-    } catch (err: any) {
-      lastError = err?.name === 'AbortError' ? 'Tempo limite do servidor Overpass excedido.' : (err?.message || lastError);
+      if (!candidate || !Array.isArray(candidate.elements)) throw new Error('Resposta inválida do servidor Overpass.');
+      return candidate;
     } finally {
       clearTimeout(timeout);
     }
+  });
+  try {
+    // Usa o primeiro servidor saudável, sem esperar os demais em sequência.
+    json = await Promise.any(overpassRequests);
+  } catch (err: any) {
+    lastError = err?.errors?.map((item: any) => item?.message).filter(Boolean).join('; ') || 'Todos os servidores Overpass falharam ou excederam o tempo limite.';
   }
 
   // Fallback: quando o Overpass estiver indisponível, consulta o Nominatim.
