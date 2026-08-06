@@ -1,7 +1,7 @@
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
-import { json } from 'body-parser';
+// body-parser removed, using express.json()
 import { leadRouter } from './routes/leads';
 import { aiRouter } from './routes/ai';
 import { portalRouter } from './routes/portal';
@@ -27,7 +27,7 @@ if (process.env.NODE_ENV === 'production') {
   app.use(cors());
 }
 
-app.use(json({ limit: '2mb' }));
+app.use(express.json({ limit: '2mb' }));
 
 // Strict rate limiter for authentication endpoints (prevent brute force)
 app.use('/api/auth/login', rateLimit({
