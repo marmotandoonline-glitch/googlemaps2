@@ -18,13 +18,16 @@ export const RankTrackerView: React.FC<RankTrackerViewProps> = ({ leads, selecte
   const [gridData, setGridData] = useState<any>(null);
 
   const fetchRankGrid = async (leadId: string, searchKeyword: string) => {
+    if (!leadId) return;
     setLoading(true);
     try {
-      const res = await apiFetch(`/api/rank-tracker/${leadId}?keyword=${encodeURIComponent(searchKeyword)}`);
+      const res = await apiFetch(`/api/rank-tracker/${leadId}?keyword=${encodeURIComponent(searchKeyword || 'Serviços')}`);
+      if (!res.ok) throw new Error('Falha ao carregar rank tracker');
       const data = await res.json();
       setGridData(data);
     } catch (err) {
       console.error('Erro ao buscar grade de rank tracker:', err);
+      setGridData(null);
     } finally {
       setLoading(false);
     }
@@ -51,10 +54,11 @@ export const RankTrackerView: React.FC<RankTrackerViewProps> = ({ leads, selecte
     }
   };
 
-  if (!currentLead) {
+  if (!currentLead || !currentLead.id) {
     return (
-      <div className="p-12 text-center text-slate-500 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
-        Nenhum lead disponível para monitoramento de ranking. Adicione leads via Lead Finder primeiro.
+      <div className="p-12 text-center text-slate-500 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+        <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Nenhum lead selecionado ou disponível.</p>
+        <p className="text-xs">Por favor, adicione leads através do Lead Finder ou selecione um cliente válido no CRM.</p>
       </div>
     );
   }
