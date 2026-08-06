@@ -168,6 +168,54 @@ export async function searchLeads(req: Request, res: Response) {
   // O resultado continua sendo real (OpenStreetMap), mas pode não conter telefone.
   // Não falhamos a pesquisa inteira só porque um provedor de dados está lento.
   if (!json) {
+    // Fallback rápido: Photon indexa dados do OpenStreetMap e costuma responder
+    // mesmo quando uma fila do Overpass está congestionada.
+    try {
+      const photonQuery = [searchTerm, neighborhood, cityName, state].filter(Boolean).join(', ');
+      const photonController = new AbortController();
+      const photonTimeout = setTimeout(() => photonController.abort(), 8000);
+      const photonResponse = await fetch(
+        `https://photon.komoot.io/api/?q=${encodeURIComponent(photonQuery)}&limit=50`,
+        { headers: { Accept: 'application/json', 'User-Agent': 'PerfilPro-LeadFinder/1.0' }, signal: photonController.signal },
+      );
+      clearTimeout(photonTimeout);
+      if (photonResponse.ok) {
+        const photonData = await photonResponse.json() as any;
+        const photonResults = (photonData.features || [])
+          .filter((feature: any) => feature?.properties?.name)
+          .map((feature: any, index: number) => {
+            const properties = feature.properties || {};
+            const address = [properties.street, properties.housenumber, properties.district || properties.suburb].filter(Boolean).join(', ');
+            const fallbackLead = {
+              name: properties.name,
+              category: properties.type || niche || 'Comércio local',
+              phone: properties.phone || '',
+              website: properties.website || '',
+              profileUrl: '',
+              placeId: `photon-${properties.osm_type || 'place'}-${properties.osm_id || index}`,
+              rating: 0,
+              reviewsCount: 0,
+              address: address || properties.name,
+              neighborhood: properties.district || properties.suburb || neighborhood || 'Centro',
+              city: properties.city || properties.town || cityName,
+              state: properties.state || state || '',
+              description: `Local encontrado via Photon/OpenStreetMap para ${photonQuery}.`,
+              photosCount: 0,
+              hasHours: false,
+              hasServices: true,
+              hasProducts: false,
+            };
+            const diag = scoreLead({ rating: 0, reviewsCount: 0, photosCount: 0, hasWebsite: Boolean(fallbackLead.website), hasDescription: true, hasHours: false, hasServices: true, hasProducts: false });
+            return { ...fallbackLead, calculatedScore: diag.totalScore, diagnostic: diag };
+          });
+        if (photonResults.length > 0) {
+          return res.json({ query: { niche, city, neighborhood, state }, totalFound: photonResults.length, results: photonResults, source: 'photon-osm', notice: 'Resultados reais do Photon/OpenStreetMap. Telefones, sites e avaliações só aparecem quando cadastrados na fonte.' });
+        }
+      }
+    } catch (photonError: any) {
+      lastError = photonError?.name === 'AbortError' ? 'Tempo limite do Photon excedido.' : (photonError?.message || lastError);
+    }
+
     try {
       const nominatimQuery = [searchTerm, neighborhood, cityName, state].filter(Boolean).join(', ');
       const nominatimController = new AbortController();
