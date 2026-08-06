@@ -32,29 +32,46 @@ export const ProposalsView: React.FC<ProposalsViewProps> = ({
   const [videoUrl, setVideoUrl] = useState(currentLead?.videoUrl || 'https://youtube.com/watch?v=demo123');
   const [copied, setCopied] = useState(false);
 
-  // Generate WhatsApp proposal text based on lead's diagnostic
+  // Generate conditional WhatsApp proposal text based on website & Google business deficiencies
   const generateDefaultMsg = (lead: Lead | null) => {
     if (!lead) return '';
     const name = lead.name;
     const city = lead.city;
     const score = lead.score;
-    const reviews = lead.reviewsCount;
-    const rating = lead.rating;
+    const hasWebsite = Boolean(lead.website && lead.website.length > 5);
     const mainPain = lead.diagnostic?.details.find((d) => d.status === 'critical')?.issue || 'Perfil incompleto';
 
-    return `Olá! Tudo bem? Me chamo Déric, da agência PerfilPro.
+    // Regra condicional solicitada:
+    // 1. Se tem site: foca na otimização do Google Meu Negócio.
+    // 2. Se NÃO tem site: oferece ambos (Google Meu Negócio + Landing Page Profissional).
+    if (!hasWebsite) {
+      return `Olá! Tudo bem? Me chamo Déric, da agência PerfilPro.
 
-Fiz um diagnóstico gratuito do perfil da *${name}* no Google Maps de ${city} e notei algo importante:
+Fiz um diagnóstico da *${name}* em ${city} e notei duas oportunidades urgentes para captar mais clientes na região:
+1️⃣ **Google Meu Negócio:** Seu perfil está com Score ${score}/100 (${mainPain}).
+2️⃣ **Ausência de Site Profissional:** Notamos que vocês ainda não possuem um site/landing page para fechar vendas pelo celular.
 
-Seu perfil está com **Score ${score}/100** no nosso sistema de auditoria.
-⚠️ **Ponto crítico identificado:** ${mainPain}
+Preparamos uma estratégia completa combinando o **Posicionamento no Top 3 do Google Empresas + Criação de uma Landing Page Profissional** de alta conversão.
 
-Seus concorrentes locais já possuem mais avaliações e catálogo completo no Google.
+Gravei um vídeo rápido explicando como funciona:
+🔗 ${videoUrl}
 
-Gravei um vídeo curto (1m30s) mostrando exatamente o que ajustar para colocar a *${name}* nas primeiras posições do Google Pack Local:
+Podemos bater um papo de 5 minutos sobre isso?`;
+    } else {
+      return `Olá! Tudo bem? Me chamo Déric, da agência PerfilPro.
+
+Fiz um diagnóstico gratuito do perfil da *${name}* no Google Maps de ${city}. Vi que vocês já possuem site (ótimo!), mas o perfil no Google Empresas está com lacunas importantes (Score ${score}/100).
+⚠️ **Ponto crítico:** ${mainPain}
+
+Seus concorrentes estão captando os clientes que pesquisam no celular na sua região por falta de otimização no Google Maps.
+
+Preparamos um plano focado exclusivamente em **Otimização Avançada e Gestão do Google Meu Negócio** para colocar a *${name}* no Top 3.
+
+Gravei um vídeo rápido mostrando a estratégia:
 🔗 ${videoUrl}
 
 Podemos bater um papo rápido de 5 minutos sobre isso?`;
+    }
   };
 
   const [message, setMessage] = useState(generateDefaultMsg(currentLead));
