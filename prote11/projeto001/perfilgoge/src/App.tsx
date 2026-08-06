@@ -138,25 +138,25 @@ export default function App() {
     );
   };
 
-  // Layout / Navigation - Stripe Light Mode Style
+  // Layout / Navigation - Mercury Bank Design System
   return (
-    <div className="min-h-screen bg-[#f6f9fc] text-[#0a2540] flex flex-col font-sans">
-      <header className="bg-white border-b border-[#e2e8f0] sticky top-0 z-40">
+    <div className="min-h-screen bg-[#ECEDF7] text-[#16162B] flex flex-col font-sans">
+      <header className="bg-white border-b border-[#E7E7F1] sticky top-0 z-40 shadow-2xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-[#635bff] rounded-lg flex items-center justify-center text-white font-black text-base shadow-sm">P</div>
-              <span className="font-bold text-sm tracking-tight text-[#0a2540]">PerfilPro</span>
+              <div className="w-8 h-8 bg-[#5B4FE9] rounded-xl flex items-center justify-center text-white font-black text-base shadow-xs">P</div>
+              <span className="font-bold text-sm tracking-tight text-[#16162B]">PerfilPro</span>
             </div>
             
-            <div className="hidden md:flex items-center relative w-64">
-              <Search size={14} className="absolute left-3 text-slate-400" />
+            <div className="hidden md:flex items-center relative w-72">
+              <Search size={14} className="absolute left-3.5 text-[#8A8AA3]" />
               <input
                 type="text"
-                placeholder="Search..."
-                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-md pl-9 pr-3 py-1.5 text-xs text-[#0a2540] focus:outline-none focus:border-[#635bff] focus:bg-white transition-all shadow-2xs"
+                placeholder="Buscar ou ir para..."
+                className="w-full bg-[#ECEDF7]/50 border border-[#E2E2EE] rounded-full pl-9 pr-4 py-1.5 text-xs text-[#16162B] focus:outline-none focus:border-[#5B4FE9] focus:bg-white transition-all shadow-2xs"
                 readOnly
-                value="Google Business Intelligence"
+                value="Google Business Intelligence (⌘K)"
               />
             </div>
           </div>
@@ -164,20 +164,20 @@ export default function App() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/portal')}
-              className="py-1.5 px-3 bg-[#635bff] hover:bg-[#5851db] text-white font-medium text-xs rounded-md transition-all shadow-xs flex items-center gap-1.5"
+              className="py-1.5 px-4 bg-[#5B4FE9] hover:bg-[#4C3FDB] text-white font-medium text-xs rounded-full transition-all shadow-xs flex items-center gap-1.5"
             >
               Portal do Cliente
             </button>
-            <div className="h-4 w-[1px] bg-slate-200"></div>
-            <span className="text-xs text-slate-600 font-medium hidden sm:inline">{user?.name || user?.email}</span>
-            <button onClick={logout} className="text-xs px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 rounded-md transition-colors border border-[#e2e8f0] shadow-2xs font-medium">
+            <div className="h-4 w-[1px] bg-[#E7E7F1]"></div>
+            <span className="text-xs text-[#8A8AA3] font-medium hidden sm:inline">{user?.name || user?.email}</span>
+            <button onClick={logout} className="text-xs px-3 py-1.5 bg-white hover:bg-[#ECEDF7]/40 text-[#16162B] rounded-full transition-colors border border-[#E2E2EE] shadow-2xs font-medium">
               Sair
             </button>
           </div>
         </div>
 
-        {/* Subnav Pills Stripe Style */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-1 overflow-x-auto h-12 border-t border-[#f0f4f8]">
+        {/* Subnav Pills Mercury Style */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-1.5 overflow-x-auto h-12 border-t border-[#E7E7F1] bg-white">
           {[
             { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
             { to: '/prospect', label: 'Lead Finder', icon: Search },
@@ -194,19 +194,19 @@ export default function App() {
                 key={tab.to}
                 to={tab.to}
                 className={({ isActive }) =>
-                  `px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-all whitespace-nowrap ${
+                  `px-3.5 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 transition-all whitespace-nowrap ${
                     isActive
-                      ? 'bg-[#635bff]/10 text-[#635bff] font-semibold'
-                      : 'text-slate-600 hover:text-[#0a2540] hover:bg-slate-100/80'
+                      ? 'bg-[#F1F0FC] text-[#5B4FE9] font-semibold'
+                      : 'text-[#8A8AA3] hover:text-[#16162B] hover:bg-[#ECEDF7]/50'
                   }`
                 }
               >
                 {({ isActive }) => (
                   <>
-                    <IconComp size={14} className={isActive ? 'text-[#635bff]' : 'text-slate-400'} />
+                    <IconComp size={14} className={isActive ? 'text-[#5B4FE9]' : 'text-[#8A8AA3]'} />
                     <span>{tab.label}</span>
                     {tab.badge !== undefined && (
-                      <span className="text-[10px] bg-slate-200/80 text-slate-700 px-1.5 py-0.2 rounded-full font-mono">
+                      <span className="text-[10px] bg-[#ECEDF7] text-[#16162B] px-1.5 py-0.2 rounded-full font-mono">
                         {tab.badge}
                       </span>
                     )}

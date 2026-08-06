@@ -89,86 +89,85 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ leads, onSelectLea
 
   return (
     <div className="space-y-6">
-      {/* Stripe Billing Header Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#e2e8f0]">
+      {/* Mercury Header Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#E7E7F1]">
         <div>
-          <h1 className="text-2xl font-bold text-[#0a2540] tracking-tight">Billing & Growth</h1>
-          <p className="text-xs text-slate-500 mt-0.5">Visão geral de receita, receita recorrente e performance de clientes locais.</p>
+          <h1 className="text-2xl font-semibold text-[#16162B] tracking-tight">Painel Operacional</h1>
+          <p className="text-xs text-[#8A8AA3] mt-0.5">Visão geral de receita, MRR e performance de prospecção local.</p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <button className="px-3 py-1.5 bg-white border border-[#e2e8f0] rounded-md text-xs font-medium text-slate-700 hover:bg-slate-50 shadow-2xs flex items-center gap-1.5">
+          <button className="px-3 py-1.5 bg-white border border-[#E2E2EE] rounded-full text-xs font-medium text-[#16162B] hover:bg-[#ECEDF7]/50 shadow-2xs flex items-center gap-1.5">
             <span>All time</span>
-            <ChevronRight size={12} className="rotate-90 text-slate-400" />
+            <ChevronRight size={12} className="rotate-90 text-[#8A8AA3]" />
           </button>
-          <button className="px-3 py-1.5 bg-white border border-[#e2e8f0] rounded-md text-xs font-medium text-slate-700 hover:bg-slate-50 shadow-2xs flex items-center gap-1.5">
-            <Calendar size={13} className="text-slate-400" />
+          <button className="px-3 py-1.5 bg-white border border-[#E2E2EE] rounded-full text-xs font-medium text-[#16162B] hover:bg-[#ECEDF7]/50 shadow-2xs flex items-center gap-1.5">
+            <Calendar size={13} className="text-[#8A8AA3]" />
             <span>Jan 1–Sep 10</span>
           </button>
-          <button className="px-3 py-1.5 bg-white border border-[#e2e8f0] rounded-md text-xs font-medium text-slate-700 hover:bg-slate-50 shadow-2xs flex items-center gap-1.5">
+          <button className="px-3 py-1.5 bg-white border border-[#E2E2EE] rounded-full text-xs font-medium text-[#16162B] hover:bg-[#ECEDF7]/50 shadow-2xs flex items-center gap-1.5">
             <span>Monthly</span>
-            <ChevronRight size={12} className="rotate-90 text-slate-400" />
+            <ChevronRight size={12} className="rotate-90 text-[#8A8AA3]" />
           </button>
           <button
             onClick={() => onNavigateTab('prospect')}
-            className="px-3 py-1.5 bg-white border border-[#e2e8f0] rounded-md text-xs font-medium text-slate-700 hover:bg-slate-50 shadow-2xs flex items-center gap-1.5"
+            className="px-3.5 py-1.5 bg-[#5B4FE9] hover:bg-[#4C3FDB] text-white rounded-full text-xs font-medium shadow-xs flex items-center gap-1.5"
           >
-            <Settings size={13} className="text-slate-400" />
-            <span>Configure</span>
+            <Zap size={13} /> Prospectar Leads
           </button>
         </div>
       </div>
 
-      {/* Stripe Growth Cards Grid */}
+      {/* Mercury Growth Cards Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* MRR Card */}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl p-6 shadow-xs space-y-4">
+        <div className="bg-white border border-[#E7E7F1] rounded-[20px] p-6 shadow-2xs space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">MRR</span>
-              <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-mono">i</span>
+              <span className="text-[11px] font-medium text-[#8A8AA3] uppercase tracking-wider">Receita em Carteira (MRR)</span>
+              <span className="text-[10px] bg-[#ECEDF7] text-[#16162B] px-1.5 py-0.5 rounded font-mono">i</span>
             </div>
-            <span className="text-[11px] text-slate-400 font-mono">Data as of Sep 9</span>
+            <span className="text-[11px] text-[#8A8AA3] font-mono">Data as of Sep 9</span>
           </div>
 
           <div className="flex items-baseline gap-3">
-            <span className="text-3xl font-extrabold text-[#0a2540]">
-              R$ {totalRevenue.toLocaleString('pt-BR')}
+            <span className="text-3xl font-semibold text-[#16162B] tabular-nums">
+              R$ {totalRevenue.toLocaleString('pt-BR')}<span className="text-lg font-normal text-[#8A8AA3]">.00</span>
             </span>
-            <span className="text-xs font-semibold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded flex items-center gap-0.5">
+            <span className="text-xs font-semibold bg-[#E7F6ED] text-[#1F9254] px-2 py-0.5 rounded-full flex items-center gap-0.5">
               <TrendingUp size={12} /> +55.9%
             </span>
           </div>
 
-          <p className="text-xs text-slate-500">
-            MRR Recorrente (Mensalistas): <span className="font-bold text-[#0a2540]">R$ {mrr.toLocaleString('pt-BR')}/mês</span>
+          <p className="text-xs text-[#8A8AA3]">
+            Mensalistas Ativos: <span className="font-semibold text-[#16162B]">R$ {mrr.toLocaleString('pt-BR')}/mês</span>
           </p>
 
-          {/* Simulated Stripe Chart */}
-          <div className="pt-4 border-t border-[#f0f4f8]">
-            <div className="h-28 w-full bg-[#f8fafc] rounded-lg border border-[#e2e8f0] p-3 flex flex-col justify-between relative overflow-hidden">
+          {/* Mercury Line Chart */}
+          <div className="pt-4 border-t border-[#E7E7F1]">
+            <div className="h-28 w-full bg-[#ECEDF7]/30 rounded-xl border border-[#E2E2EE] p-3 flex flex-col justify-between relative overflow-hidden">
               <div className="absolute inset-0 flex items-end px-3">
-                <svg className="w-full h-20 text-[#635bff] overflow-visible" fill="none" viewBox="0 0 300 80">
+                <svg className="w-full h-20 text-[#5B4FE9] overflow-visible" fill="none" viewBox="0 0 300 80">
                   <path
                     d="M 0 70 Q 75 55 150 35 T 300 15"
                     stroke="currentColor"
-                    strokeWidth="2.5"
+                    strokeWidth="2"
                     strokeLinecap="round"
                   />
                   <path
                     d="M 0 70 Q 75 55 150 35 T 300 15 L 300 80 L 0 80 Z"
                     fill="url(#grad)"
-                    opacity="0.1"
+                    opacity="0.12"
                   />
                   <defs>
                     <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#635bff" />
-                      <stop offset="100%" stopColor="#635bff" stopOpacity="0" />
+                      <stop offset="0%" stopColor="#5B4FE9" />
+                      <stop offset="100%" stopColor="#5B4FE9" stopOpacity="0" />
                     </linearGradient>
                   </defs>
                 </svg>
               </div>
-              <div className="flex justify-between text-[10px] text-slate-400 font-mono z-10">
+              <div className="flex justify-between text-[10px] text-[#8A8AA3] font-mono z-10">
                 <span>Jan 1</span>
                 <span>Sep 9</span>
               </div>
@@ -177,51 +176,51 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ leads, onSelectLea
         </div>
 
         {/* Active Subscribers Card */}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl p-6 shadow-xs space-y-4">
+        <div className="bg-white border border-[#E7E7F1] rounded-[20px] p-6 shadow-2xs space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">Active subscribers</span>
-              <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-mono">i</span>
+              <span className="text-[11px] font-medium text-[#8A8AA3] uppercase tracking-wider">Total de Leads & Clientes</span>
+              <span className="text-[10px] bg-[#ECEDF7] text-[#16162B] px-1.5 py-0.5 rounded font-mono">i</span>
             </div>
-            <span className="text-[11px] text-slate-400 font-mono">Data as of Sep 9</span>
+            <span className="text-[11px] text-[#8A8AA3] font-mono">Data as of Sep 9</span>
           </div>
 
           <div className="flex items-baseline gap-3">
-            <span className="text-3xl font-extrabold text-[#0a2540]">{totalLeads}</span>
-            <span className="text-xs font-semibold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded flex items-center gap-0.5">
+            <span className="text-3xl font-semibold text-[#16162B] tabular-nums">{totalLeads}</span>
+            <span className="text-xs font-semibold bg-[#E7F6ED] text-[#1F9254] px-2 py-0.5 rounded-full flex items-center gap-0.5">
               <TrendingUp size={12} /> +55.6%
             </span>
           </div>
 
-          <p className="text-xs text-slate-500">
-            Leads em Negociação & Produção: <span className="font-bold text-[#0a2540]">{leadsInNegotiation + leadsInProduction} ativos</span>
+          <p className="text-xs text-[#8A8AA3]">
+            Em Negociação & Produção: <span className="font-semibold text-[#16162B]">{leadsInNegotiation + leadsInProduction} ativos</span>
           </p>
 
-          {/* Simulated Stripe Chart 2 */}
-          <div className="pt-4 border-t border-[#f0f4f8]">
-            <div className="h-28 w-full bg-[#f8fafc] rounded-lg border border-[#e2e8f0] p-3 flex flex-col justify-between relative overflow-hidden">
+          {/* Mercury Line Chart 2 */}
+          <div className="pt-4 border-t border-[#E7E7F1]">
+            <div className="h-28 w-full bg-[#ECEDF7]/30 rounded-xl border border-[#E2E2EE] p-3 flex flex-col justify-between relative overflow-hidden">
               <div className="absolute inset-0 flex items-end px-3">
-                <svg className="w-full h-20 text-[#635bff] overflow-visible" fill="none" viewBox="0 0 300 80">
+                <svg className="w-full h-20 text-[#5B4FE9] overflow-visible" fill="none" viewBox="0 0 300 80">
                   <path
                     d="M 0 65 Q 100 45 200 25 T 300 10"
                     stroke="currentColor"
-                    strokeWidth="2.5"
+                    strokeWidth="2"
                     strokeLinecap="round"
                   />
                   <path
                     d="M 0 65 Q 100 45 200 25 T 300 10 L 300 80 L 0 80 Z"
                     fill="url(#grad2)"
-                    opacity="0.1"
+                    opacity="0.12"
                   />
                   <defs>
                     <linearGradient id="grad2" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#635bff" />
-                      <stop offset="100%" stopColor="#635bff" stopOpacity="0" />
+                      <stop offset="0%" stopColor="#5B4FE9" />
+                      <stop offset="100%" stopColor="#5B4FE9" stopOpacity="0" />
                     </linearGradient>
                   </defs>
                 </svg>
               </div>
-              <div className="flex justify-between text-[10px] text-slate-400 font-mono z-10">
+              <div className="flex justify-between text-[10px] text-[#8A8AA3] font-mono z-10">
                 <span>Jan 1</span>
                 <span>Sep 9</span>
               </div>
@@ -233,15 +232,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ leads, onSelectLea
       {/* Second Row: Funnel and Opportunities */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">
         {/* Funnel distribution */}
-        <div className="lg:col-span-2 bg-white border border-[#e2e8f0] rounded-xl p-6 shadow-xs space-y-4">
+        <div className="lg:col-span-2 bg-white border border-[#E7E7F1] rounded-[20px] p-6 shadow-2xs space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-bold text-[#0a2540] text-sm">Distribuição do Funil de Vendas</h3>
-              <p className="text-xs text-slate-500">Status atual das empresas registradas no CRM</p>
+              <h3 className="font-semibold text-[#16162B] text-sm">Distribuição do Funil de Vendas</h3>
+              <p className="text-xs text-[#8A8AA3]">Status atual das empresas registradas no CRM</p>
             </div>
             <button
               onClick={() => onNavigateTab('leads')}
-              className="text-xs text-[#635bff] hover:underline font-semibold flex items-center gap-1"
+              className="text-xs text-[#5B4FE9] hover:underline font-semibold flex items-center gap-1"
             >
               Ver Kanban <ChevronRight size={14} />
             </button>
@@ -255,21 +254,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ leads, onSelectLea
               return (
                 <div key={stage} className="space-y-1 text-xs">
                   <div className="flex justify-between font-medium">
-                    <span className="text-slate-700">{stageLabels[stage]}</span>
-                    <span className="text-slate-500 font-mono">
+                    <span className="text-[#16162B]">{stageLabels[stage]}</span>
+                    <span className="text-[#8A8AA3] font-mono">
                       {count} ({percentage}%)
                     </span>
                   </div>
-                  <div className="w-full bg-[#f0f4f8] h-2 rounded-full overflow-hidden">
+                  <div className="w-full bg-[#ECEDF7] h-2 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all duration-500 ${
                         ['novo', 'analisado'].includes(stage)
-                          ? 'bg-slate-400'
+                          ? 'bg-[#B4B4C6]'
                           : ['contato_enviado', 'respondeu', 'negociacao'].includes(stage)
-                          ? 'bg-amber-500'
+                          ? 'bg-[#B7791F]'
                           : ['fechado', 'onboarding', 'producao'].includes(stage)
-                          ? 'bg-emerald-500'
-                          : 'bg-[#635bff]'
+                          ? 'bg-[#1F9254]'
+                          : 'bg-[#5B4FE9]'
                       }`}
                       style={{ width: `${percentage}%` }}
                     />
@@ -281,46 +280,46 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ leads, onSelectLea
         </div>
 
         {/* Urgent Opportunities */}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl p-6 shadow-xs space-y-4">
+        <div className="bg-white border border-[#E7E7F1] rounded-[20px] p-6 shadow-2xs space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-rose-50 text-rose-600 rounded-md border border-rose-200">
+              <div className="p-1.5 bg-[#FDEAF0] text-[#D6336C] rounded-full border border-[#D6336C]/20">
                 <AlertTriangle size={15} />
               </div>
               <div>
-                <h3 className="font-bold text-[#0a2540] text-sm">Maiores Oportunidades</h3>
-                <p className="text-xs text-slate-500">Score de alerta (&lt; 50)</p>
+                <h3 className="font-semibold text-[#16162B] text-sm">Maiores Oportunidades</h3>
+                <p className="text-xs text-[#8A8AA3]">Score de alerta (&lt; 50)</p>
               </div>
             </div>
           </div>
 
           <div className="space-y-3">
             {highOpportunityLeads.length === 0 ? (
-              <p className="text-xs text-slate-400 italic py-4 text-center">Nenhum lead com falha crítica no momento.</p>
+              <p className="text-xs text-[#8A8AA3] italic py-4 text-center">Nenhum lead com falha crítica no momento.</p>
             ) : (
               highOpportunityLeads.map((lead) => (
                 <div
                   key={lead.id}
                   onClick={() => onSelectLead(lead)}
-                  className="p-3 bg-[#f8fafc] hover:bg-slate-100 border border-[#e2e8f0] rounded-lg cursor-pointer transition-all space-y-2 group"
+                  className="p-3 bg-[#ECEDF7]/30 hover:bg-[#ECEDF7]/70 border border-[#E2E2EE] rounded-xl cursor-pointer transition-all space-y-2 group"
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="font-bold text-[#0a2540] text-xs group-hover:text-[#635bff] transition-colors">
+                      <h4 className="font-semibold text-[#16162B] text-xs group-hover:text-[#5B4FE9] transition-colors">
                         {lead.name}
                       </h4>
-                      <p className="text-[11px] text-slate-500">
+                      <p className="text-[11px] text-[#8A8AA3]">
                         {lead.category} • {lead.city}
                       </p>
                     </div>
-                    <span className="bg-rose-50 text-rose-700 border border-rose-200 font-mono font-bold text-[10px] px-2 py-0.5 rounded-full">
+                    <span className="bg-[#FDEAF0] text-[#D6336C] font-mono font-bold text-[10px] px-2 py-0.5 rounded-full">
                       Score {lead.score}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-[#e2e8f0]">
+                  <div className="flex items-center justify-between text-[11px] text-[#8A8AA3] pt-1 border-t border-[#E2E2EE]">
                     <span>{lead.reviewsCount} avaliações ({lead.rating}★)</span>
-                    <span className="text-[#635bff] font-semibold flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
+                    <span className="text-[#5B4FE9] font-semibold flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
                       Analisar <ArrowUpRight size={12} />
                     </span>
                   </div>
@@ -331,16 +330,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ leads, onSelectLea
 
           <button
             onClick={() => onNavigateTab('prospect')}
-            className="w-full py-2.5 bg-[#635bff] hover:bg-[#5851db] text-white text-xs font-semibold rounded-md transition-colors shadow-xs flex items-center justify-center gap-1.5"
+            className="w-full py-2.5 bg-[#5B4FE9] hover:bg-[#4C3FDB] text-white text-xs font-medium rounded-full transition-colors shadow-xs flex items-center justify-center gap-1.5"
           >
             <Zap size={14} /> Buscar Mais Empresas na Região
           </button>
           
           <button
             onClick={() => onNavigateTab('rank-tracker')}
-            className="w-full py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-[#e2e8f0] text-xs font-semibold rounded-md transition-colors shadow-2xs flex items-center justify-center gap-1.5"
+            className="w-full py-2.5 bg-white hover:bg-[#ECEDF7]/50 text-[#16162B] border border-[#E2E2EE] text-xs font-medium rounded-full transition-colors shadow-2xs flex items-center justify-center gap-1.5"
           >
-            <MapPin size={14} className="text-[#635bff]" /> Abrir Rank Tracker Local
+            <MapPin size={14} className="text-[#5B4FE9]" /> Abrir Rank Tracker Local
           </button>
         </div>
       </div>
