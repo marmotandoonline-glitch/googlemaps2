@@ -25,6 +25,8 @@ import { LoginView } from './components/LoginView';
 import { RegisterView } from './components/RegisterView';
 import { ProtectedRoute } from './router/ProtectedRoute';
 import { PortalPage } from './pages/PortalPage';
+import { WhatsAppView } from './components/WhatsAppView';
+import { Smartphone } from 'lucide-react';
 import { useAuth } from './auth/AuthProvider';
 
 export default function App() {
@@ -159,6 +161,7 @@ export default function App() {
               { to: '/prospect', label: 'Lead Finder', icon: Search },
               { to: '/leads', label: 'CRM Pipeline', icon: Kanban, badge: leads.length },
               { to: '/proposals', label: 'Propostas WhatsApp', icon: MessageSquare },
+              { to: '/whatsapp', label: 'WhatsApp (QR)', icon: Smartphone },
               { to: '/ai-engine', label: 'Motor de IA', icon: Sparkles },
               { to: '/reports', label: 'Relatórios', icon: FileText },
             ].map((tab) => {
@@ -267,6 +270,14 @@ export default function App() {
                   onSelectLead={setSelectedLead}
                   onUpdateProposalMsg={handleUpdateProposalMsg}
                 />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/whatsapp"
+            element={
+              <ProtectedRoute>
+                <WhatsAppView />
               </ProtectedRoute>
             }
           />

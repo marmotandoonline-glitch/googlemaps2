@@ -6,6 +6,7 @@ import { leadRouter } from './routes/leads';
 import { aiRouter } from './routes/ai';
 import { portalRouter } from './routes/portal';
 import { authRouter } from './routes/auth';
+import { whatsappRouter } from './routes/whatsapp';
 import { authMiddleware } from './middleware/authMiddleware';
 import express from 'express';
 import path from 'path';
@@ -75,6 +76,7 @@ app.use('/api/client-portal', portalRouter);
 // Protected routes (require JWT)
 app.use('/api/leads', authMiddleware, leadRouter);
 app.use('/api/ai', authMiddleware, aiRouter);
+app.use('/api/whatsapp', authMiddleware, whatsappRouter);
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
