@@ -117,8 +117,18 @@ export default function App() {
     }
   };
 
-  const handleUpdateProposalMsg = (leadId: string, customProposalMsg: string, videoUrl: string) => {
+  const handleUpdateProposalMsg = async (leadId: string, customProposalMsg: string, videoUrl: string) => {
     setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, customProposalMsg, videoUrl } : l)));
+    try {
+      const response = await apiFetch(`/api/leads/${leadId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customProposalMsg, videoUrl }),
+      });
+      if (!response.ok) throw new Error('Falha ao salvar proposta');
+    } catch (err) {
+      console.error('Erro ao salvar proposta:', err);
+    }
   };
 
   const handleSaveAiContentToLead = (leadId: string, aiData: AIContentResult) => {
@@ -135,11 +145,21 @@ export default function App() {
     }
   };
 
-  const handleClientPortalSubmit = (portalData: ClientPortalData) => {
-    if (!selectedLead) return;
-    setLeads((prev) =>
-      prev.map((l) => (l.id === selectedLead.id ? { ...l, clientPortalData: portalData, stage: 'onboarding' } : l))
-    );
+  const handleClientPortalSubmit = async (portalData: ClientPortalData) => {
+    if (!selectedLead) return false;
+    try {
+      const response = await apiFetch(`/api/leads/${selectedLead.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientPortalData: portalData, stage: 'onboarding' }),
+      });
+      if (!response.ok) throw new Error('Falha ao salvar os dados do portal.');
+      setLeads((prev) => prev.map((l) => (l.id === selectedLead.id ? { ...l, clientPortalData: portalData, stage: 'onboarding' } : l)));
+      return true;
+    } catch (err) {
+      console.error('Erro ao salvar dados do portal:', err);
+      return false;
+    }
   };
 
   // Se estiver na tela de login/registro ou portal público, renderiza sem a sidebar do Mercury
@@ -254,7 +274,7 @@ export default function App() {
                       Gestão
                     </div>
                     <NavLink
-                      to="/portal"
+                      to="/client-portal"
                       className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[#8A8AA3] hover:text-[#16162B] hover:bg-[#ECEDF7]/50 transition-colors"
                     >
                       <Globe size={16} className="text-[#8A8AA3]" />
@@ -397,8 +417,11 @@ export default function App() {
                         />
                       }
                     />
-                    <Route
-                      path="/reports"
+                                        <Route
+                      path="/client-portal"
+                      element={<ClientPortalView lead={selectedLead} onSubmitPortalData={handleClientPortalSubmit} />}
+                    />
+                    <Route path="/reports"
                       element={
                         <ReportsView
                           leads={leads}

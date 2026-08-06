@@ -59,6 +59,7 @@ export const CrmPipelineView: React.FC<CrmPipelineViewProps> = ({
   const [selectedLeadModal, setSelectedLeadModal] = useState<Lead | null>(null);
   const [newNote, setNewNote] = useState('');
   const [copiedTokenId, setCopiedTokenId] = useState<string | null>(null);
+  const [diagnosticLead, setDiagnosticLead] = useState<Lead | null>(null);
 
   const filteredLeads = leads.filter((l) => {
     const matchesSearch =
@@ -73,7 +74,7 @@ export const CrmPipelineView: React.FC<CrmPipelineViewProps> = ({
 
   const handleCopyPortalLink = (token: string, leadId: string) => {
     const portalUrl = `${window.location.origin}/portal/${token}`;
-    navigator.clipboard.writeText(portalUrl);
+    navigator.clipboard.writeText(portalUrl).catch(() => undefined);
     setCopiedTokenId(leadId);
     setTimeout(() => setCopiedTokenId(null), 2000);
   };
@@ -179,6 +180,20 @@ export const CrmPipelineView: React.FC<CrmPipelineViewProps> = ({
       </div>
 
       {/* Modal de Detalhes do Lead */}
+      {diagnosticLead && (
+        <div className="fixed inset-0 bg-[#16162B]/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-[24px] max-w-lg w-full p-6 space-y-4 shadow-xl">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-[#16162B]">Diagnóstico — {diagnosticLead.name}</h3>
+              <button onClick={() => setDiagnosticLead(null)} className="text-[#8A8AA3]">✕</button>
+            </div>
+            <p className="text-sm text-[#16162B]">{diagnosticLead.diagnostic?.summary || 'Sem diagnóstico disponível.'}</p>
+            <div className="text-xs text-[#8A8AA3]">Score: {diagnosticLead.score}/100 · Avaliações: {diagnosticLead.reviewsCount}</div>
+            <button onClick={() => setDiagnosticLead(null)} className="w-full py-2 bg-[#5B4FE9] text-white rounded-full text-xs font-medium">Fechar</button>
+          </div>
+        </div>
+      )}
+
       {selectedLeadModal && (
         <div className="fixed inset-0 bg-[#16162B]/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-white border border-[#E7E7F1] rounded-[24px] max-w-2xl w-full p-6 space-y-6 shadow-xl max-h-[90vh] overflow-y-auto">
@@ -255,7 +270,7 @@ export const CrmPipelineView: React.FC<CrmPipelineViewProps> = ({
               <div className="flex justify-between items-center">
                 <span className="text-xs font-semibold text-[#5B4FE9]">Link do Portal do Cliente (White-label)</span>
                 <button
-                  onClick={() => handleCopyPortalLink(selectedLeadModal.portalToken, selectedLeadModal.id)}
+                  onClick={() => handleCopyPortalLink(selectedLeadModal.clientPortalToken, selectedLeadModal.id)}
                   className="px-3 py-1 bg-[#5B4FE9] text-white rounded-full text-xs font-medium flex items-center gap-1 shadow-2xs"
                 >
                   {copiedTokenId === selectedLeadModal.id ? <Check size={12} /> : <Copy size={12} />}
@@ -263,7 +278,7 @@ export const CrmPipelineView: React.FC<CrmPipelineViewProps> = ({
                 </button>
               </div>
               <p className="text-[11px] text-[#8A8AA3] font-mono break-all">
-                {window.location.origin}/portal/{selectedLeadModal.portalToken}
+                {window.location.origin}/portal/{selectedLeadModal.clientPortalToken}
               </p>
             </div>
 

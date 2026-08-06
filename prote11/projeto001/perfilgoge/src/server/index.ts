@@ -13,6 +13,12 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 
+// Inicializa o worker somente quando Redis e a chave de IA estão configurados.
+// Sem essa inicialização, /api/ai/generate cria jobs que nunca saem de queued.
+if (process.env.REDIS_URL && process.env.GEMINI_API_KEY) {
+  import('./workers/aiWorker').catch((err) => console.error('Falha ao iniciar worker de IA:', err));
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 

@@ -27,7 +27,7 @@ export const ProposalsView: React.FC<ProposalsViewProps> = ({
 
   const generateDefaultMsg = (lead: Lead | null) => {
     if (!lead) return '';
-    return `Olá, ${lead.name}! Analisei o perfil de vocês no Google Maps e identificamos oportunidades de crescimento em ${lead.city}. Preparamos um diagnóstico exclusivo: ${window.location.origin}/portal/${(lead as any).portalToken || 'demo'}`;
+    return `Olá, ${lead.name}! Analisei o perfil de vocês no Google Maps e identificamos oportunidades de crescimento em ${lead.city}. Preparamos um diagnóstico exclusivo: ${window.location.origin}/portal/${lead.clientPortalToken || ''}`;
   };
 
   const [message, setMessage] = useState(currentLead?.customProposalMsg || generateDefaultMsg(currentLead));
@@ -47,7 +47,8 @@ export const ProposalsView: React.FC<ProposalsViewProps> = ({
 
   const handleOpenWhatsApp = () => {
     if (!currentLead) return;
-    const phoneDigits = (currentLead.phone || '11999999999').replace(/\D/g, '');
+    const phoneDigits = (currentLead.phone || '').replace(/\D/g, '');
+    if (!phoneDigits) return;
     const cleanPhone = phoneDigits.startsWith('55') ? phoneDigits : `55${phoneDigits}`;
     const encodedText = encodeURIComponent(message);
     const waUrl = `https://wa.me/${cleanPhone}?text=${encodedText}`;

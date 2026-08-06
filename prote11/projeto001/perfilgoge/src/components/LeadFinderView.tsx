@@ -11,6 +11,12 @@ import {
   Info,
 } from 'lucide-react';
 import { LeadSearchResult } from '../types';
+import { useAuth } from '../auth/AuthProvider';
+
+interface SearchResponse {
+  results?: LeadSearchResult[];
+  error?: string;
+}
 
 interface LeadFinderViewProps {
   onAddLeadToCrm: (leadData: LeadSearchResult) => void;
@@ -23,6 +29,9 @@ export const LeadFinderView: React.FC<LeadFinderViewProps> = ({ onAddLeadToCrm, 
   const [neighborhood, setNeighborhood] = useState('Moema');
   const [state, setState] = useState('SP');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [diagnostic, setDiagnostic] = useState<LeadSearchResult | null>(null);
+  const { apiFetch } = useAuth();
   const [searchResults, setSearchResults] = useState<LeadSearchResult[]>([
     {
       placeId: 'lead-1',
@@ -77,11 +86,24 @@ export const LeadFinderView: React.FC<LeadFinderViewProps> = ({ onAddLeadToCrm, 
   ]);
 
   const handleSearch = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+    e?.preventDefault();
     setLoading(true);
-    setTimeout(() => {
+    setError(null);
+    try {
+      const response = await apiFetch('/api/leads/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ niche, city, neighborhood, state }),
+      });
+      const data = (await response.json().catch(() => ({}))) as SearchResponse;
+      if (!response.ok) throw new Error(data.error || 'Não foi possível realizar a busca.');
+      setSearchResults(data.results || []);
+    } catch (err: any) {
+      setError(err?.message || 'Erro ao realizar a busca.');
+      setSearchResults([]);
+    } finally {
       setLoading(false);
-    }, 600);
+    }
   };
 
   return (
@@ -166,9 +188,34 @@ export const LeadFinderView: React.FC<LeadFinderViewProps> = ({ onAddLeadToCrm, 
         </form>
       </div>
 
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-xs" role="alert">
+          {error}
+        </div>
+      )}
+
+      {diagnostic && (
+        <div className="fixed inset-0 z-50 bg-[#16162B]/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-[24px] max-w-lg w-full p-6 space-y-4 shadow-xl">
+            <div className="flex justify-between items-center">
+              <h3 className="font-bold text-[#16162B]">Diagnóstico — {diagnostic.name}</h3>
+              <button onClick={() => setDiagnostic(null)} className="text-[#8A8AA3]">✕</button>
+            </div>
+            <p className="text-sm text-[#16162B]">{diagnostic.diagnostic.summary}</p>
+            <div className="text-xs text-[#8A8AA3]">Score: {diagnostic.diagnostic.totalScore}/100</div>
+            <div className="flex flex-wrap gap-2">{diagnostic.diagnostic.quickWins.map((win) => <span key={win} className="px-3 py-1 bg-[#ECEDF7] rounded-full text-xs text-[#16162B]">{win}</span>)}</div>
+            <button onClick={() => setDiagnostic(null)} className="w-full py-2 bg-[#5B4FE9] text-white rounded-full text-xs font-medium">Fechar</button>
+          </div>
+        </div>
+      )}
+
       {/* Search Results Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {searchResults.map((item) => {
+        {searchResults.length === 0 && !loading ? (
+          <div className="md:col-span-2 lg:col-span-3 bg-white border border-[#E7E7F1] rounded-[20px] p-8 text-center text-sm text-[#8A8AA3]">
+            Nenhum resultado encontrado para os filtros informados.
+          </div>
+        ) : searchResults.map((item) => {
           const isAdded = addedLeadPlaceIds.includes(item.placeId);
 
           return (
@@ -205,7 +252,7 @@ export const LeadFinderView: React.FC<LeadFinderViewProps> = ({ onAddLeadToCrm, 
 
               <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#E7E7F1]">
                 <button
-                  onClick={() => alert(`Diagnóstico: ${item.diagnostic.summary}`)}
+                  onClick={() => setDiagnostic(item)}
                   className="py-2 px-3 bg-[#ECEDF7]/50 hover:bg-[#ECEDF7] text-[#16162B] text-xs font-medium rounded-full transition-colors flex items-center justify-center gap-1"
                 >
                   <Info size={13} /> Diagnóstico

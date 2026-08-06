@@ -1,19 +1,19 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
+import { enqueueAiJob } from '../services/aiService';
 
 // POST /api/ai/generate -> enqueue job
 export async function enqueueAiGeneration(req: Request, res: Response) {
   const { leadId, companyName, category, city, neighborhood, existingServices, clientNotes } = req.body || {};
 
-  const job = await prisma.aIJob.create({
-    data: {
-      leadId: leadId || undefined,
-      payload: { companyName, category, city, neighborhood, existingServices, clientNotes },
-      status: 'queued',
-    },
-  });
+  if (!companyName || !category) {
+    return res.status(400).json({ error: 'companyName e category são obrigatórios.' });
+  }
 
-  // In a real system, we would also push to a queue like BullMQ here.
+  const job = await enqueueAiJob(
+    { companyName, category, city, neighborhood, existingServices, clientNotes },
+    leadId || undefined,
+  );
 
   res.status(202).json({ jobId: job.id, status: job.status });
 }

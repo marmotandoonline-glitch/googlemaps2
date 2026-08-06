@@ -15,6 +15,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { Lead, AIContentResult } from '../types';
+import { useAuth } from '../auth/AuthProvider';
 
 interface AiEngineViewProps {
   leads: Lead[];
@@ -50,6 +51,8 @@ export const AiEngineView: React.FC<AiEngineViewProps> = ({
   const [activeTab, setActiveTab] = useState<'desc' | 'services' | 'faqs' | 'categories' | 'posts' | 'alt'>('desc');
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { apiFetch } = useAuth();
 
   React.useEffect(() => {
     if (currentLead) {
@@ -64,11 +67,56 @@ export const AiEngineView: React.FC<AiEngineViewProps> = ({
   }, [currentLead?.id]);
 
   const handleGenerateAI = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+    e?.preventDefault();
+    if (!currentLead) {
+      setError('Selecione um lead antes de gerar conteúdo.');
+      return;
+    }
     setLoading(true);
-    setTimeout(() => {
+    setError(null);
+    try {
+      const enqueueResponse = await apiFetch('/api/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          leadId: currentLead.id,
+          companyName,
+          category,
+          city,
+          neighborhood,
+          existingServices,
+          clientNotes,
+        }),
+      });
+      const enqueueData = await enqueueResponse.json().catch(() => ({}));
+      if (!enqueueResponse.ok) throw new Error(enqueueData.error || 'Não foi possível iniciar a geração.');
+
+      let job: any;
+      for (let attempt = 0; attempt < 30; attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const jobResponse = await apiFetch(`/api/ai/jobs/${enqueueData.jobId}`);
+        job = await jobResponse.json().catch(() => ({}));
+        if (job.status === 'done' || job.status === 'failed') break;
+      }
+      if (job?.status !== 'done') throw new Error(job?.result?.error || 'A geração não foi concluída. Verifique o worker e a chave da IA.');
+
+      const result = job.result || {};
+      const normalized: any = {
+        optimizedDescription: result.longDescription || result.seoDescription || result.shortDescription || '',
+        servicesList: result.servicesList || [],
+        faqs: result.faqs || [],
+        suggestedCategories: result.categories?.secondary || [],
+        socialPosts: (result.postSuggestions || []).map((post: any) => ({ platform: 'Google/Instagram', caption: post.caption || post.title || '', callToAction: post.callToAction || '' })),
+        altKeywords: result.keywords || [],
+        generatedAt: result.generatedAt,
+        raw: result,
+      };
+      setAiData(normalized);
+    } catch (err: any) {
+      setError(err?.message || 'Erro ao gerar conteúdo com IA.');
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   const handleCopy = (text: string, section: string) => {
@@ -77,15 +125,28 @@ export const AiEngineView: React.FC<AiEngineViewProps> = ({
     setTimeout(() => setCopiedSection(null), 2000);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!currentLead || !aiData) return;
-    onSaveAiContentToLead(currentLead.id, aiData);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2500);
+    setError(null);
+    try {
+      const response = await apiFetch(`/api/leads/${currentLead.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ aiContentMap: aiData }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'Não foi possível salvar o conteúdo.');
+      onSaveAiContentToLead(currentLead.id, aiData);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    } catch (err: any) {
+      setError(err?.message || 'Erro ao salvar conteúdo.');
+    }
   };
 
   return (
-    <div className="space-y-6">
+      <div className="space-y-6">
+        {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-xs" role="alert">{error}</div>}
       {/* Header */}
       <div className="bg-white p-6 rounded-[20px] border border-[#E7E7F1] shadow-2xs space-y-4">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">

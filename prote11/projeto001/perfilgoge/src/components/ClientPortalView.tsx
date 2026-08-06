@@ -19,7 +19,7 @@ import { ClientPortalData, Lead } from '../types';
 
 interface ClientPortalViewProps {
   lead?: Lead | null;
-  onSubmitPortalData?: (portalData: ClientPortalData) => void;
+  onSubmitPortalData?: (portalData: ClientPortalData) => Promise<boolean> | boolean;
   onReturnToAdmin?: () => void;
 }
 
@@ -69,6 +69,8 @@ export const ClientPortalView: React.FC<ClientPortalViewProps> = ({
   const [sundayHours, setSundayHours] = useState('Fechado');
 
   const [submitted, setSubmitted] = useState(Boolean(lead?.clientPortalData?.submittedAt));
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleAddPhoto = () => {
     if (!photoInput.trim()) return;
@@ -76,8 +78,11 @@ export const ClientPortalView: React.FC<ClientPortalViewProps> = ({
     setPhotoInput('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
+    setSubmitError(null);
     const portalData: ClientPortalData = {
       companyName,
       logoUrl,
@@ -106,10 +111,15 @@ export const ClientPortalView: React.FC<ClientPortalViewProps> = ({
       submittedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
     };
 
-    if (onSubmitPortalData) {
-      onSubmitPortalData(portalData);
+    try {
+      const success = onSubmitPortalData ? await onSubmitPortalData(portalData) : true;
+      if (!success) throw new Error('Não foi possível salvar os dados.');
+      setSubmitted(true);
+    } catch (err: any) {
+      setSubmitError(err?.message || 'Não foi possível salvar os dados.');
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitted(true);
   };
 
   const togglePaymentMethod = (method: string) => {
@@ -120,6 +130,7 @@ export const ClientPortalView: React.FC<ClientPortalViewProps> = ({
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-4 sm:p-8 space-y-8 font-sans">
+      {submitError && <div className="max-w-4xl mx-auto w-full bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm" role="alert">{submitError}</div>}
       {/* Top Client Portal Navigation Bar */}
       <div className="max-w-4xl mx-auto flex justify-between items-center bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
         <div className="flex items-center gap-3">
@@ -430,8 +441,7 @@ export const ClientPortalView: React.FC<ClientPortalViewProps> = ({
               />
             </div>
 
-            <button
-              type="submit"
+                          <button type="submit" disabled={submitting}
               className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
             >
               <Send size={16} /> Enviar Informações para a Agência PerfilPro

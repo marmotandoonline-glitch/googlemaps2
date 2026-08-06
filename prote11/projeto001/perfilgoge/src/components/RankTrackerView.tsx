@@ -252,7 +252,10 @@ export const RankTrackerView: React.FC<RankTrackerViewProps> = ({ leads, selecte
                 "Notamos que a <strong>{currentLead.name}</strong> está perdendo clientes valiosos nas bordas de {currentLead.city} (Posição #{gridData.averageRank} na média), enquanto concorrentes menores dominam o Top 3. Podemos reverter isso em 30 dias."
               </p>
               <button
-                onClick={() => alert('Relatório Rank Tracker copiado para envio via WhatsApp ou PDF!')}
+                onClick={() => {
+                  const report = `Relatório de posicionamento — ${currentLead.name}\nPalavra-chave: ${gridData.keyword}\nRank médio: #${gridData.averageRank}\n\n${gridData.points.map((point: any) => `${point.direction}: #${point.clientRank}`).join('\n')}`;
+                  navigator.clipboard.writeText(report).catch(() => undefined);
+                }}
                 className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
               >
                 Gerar Relatório Comercial para WhatsApp <ChevronRight size={14} />
