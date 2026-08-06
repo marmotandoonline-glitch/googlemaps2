@@ -57,3 +57,16 @@ A compilação de produção foi executada com sucesso três vezes após as muda
 Para a geração de IA funcionar em produção, o serviço precisa ter `REDIS_URL` apontando para Redis acessível e `GEMINI_API_KEY` configurada. Para o schema corrigido, o comando de deploy deve executar `npx prisma migrate deploy --schema=prisma/schema.prisma`. Sem essas variáveis, a interface exibirá o erro correspondente em vez de fingir sucesso.
 
 EOF
+
+
+## Rodada de testes online — 06/08/2026
+
+A aplicação foi acessada no Render com a conta administrativa fornecida. Foram percorridos login, dashboard, Lead Finder, CRM e Motor de IA.
+
+| Falha reproduzida | Evidência | Correção aplicada |
+|---|---|---|
+| `POST /api/leads/search` retornava HTTP 503 ao conectar ao `overpass-api.de`. | A chamada autenticada retornou erro de conexão ao motor OpenStreetMap. | A busca agora usa três endpoints Overpass em failover, timeout controlado, validação de status e sanitização dos termos. Telefones não são mais fabricados aleatoriamente. |
+| Links do Portal do Cliente apareciam como `/portal/` ou usavam tokens mockados não aceitos pelo backend. | No CRM online, `OdontoPrime Moema` exibiu um link sem token. | Foi criado `POST /api/leads/:id/portal-token`; o botão Copiar Link gera um token criptograficamente válido e copia o link real. |
+| `GET /api/leads` retornava HTTP 502 em produção. | A chamada autenticada no navegador e por requisição direta retornou a página 502 do Render. | A listagem captura falhas Prisma e retorna JSON HTTP 503. O script de start executa `prisma migrate deploy` antes de iniciar a API, corrigindo o desalinhamento de schema no Render. |
+
+A compilação de produção foi executada novamente com sucesso, incluindo Prisma Client, Vite, TypeScript e `git diff --check`. É necessário publicar o commit e aguardar o redeploy para validar esses mesmos fluxos pós-correção no Render.

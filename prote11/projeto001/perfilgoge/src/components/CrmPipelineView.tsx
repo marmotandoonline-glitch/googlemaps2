@@ -21,6 +21,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import { Lead, PipelineStage } from '../types';
+import { useAuth } from '../auth/AuthProvider';
 
 interface CrmPipelineViewProps {
   leads: Lead[];
@@ -60,6 +61,7 @@ export const CrmPipelineView: React.FC<CrmPipelineViewProps> = ({
   const [newNote, setNewNote] = useState('');
   const [copiedTokenId, setCopiedTokenId] = useState<string | null>(null);
   const [diagnosticLead, setDiagnosticLead] = useState<Lead | null>(null);
+  const { apiFetch } = useAuth();
 
   const filteredLeads = leads.filter((l) => {
     const matchesSearch =
@@ -72,11 +74,19 @@ export const CrmPipelineView: React.FC<CrmPipelineViewProps> = ({
 
   const categories = Array.from(new Set(leads.map((l) => l.category)));
 
-  const handleCopyPortalLink = (token: string, leadId: string) => {
-    const portalUrl = `${window.location.origin}/portal/${token}`;
-    navigator.clipboard.writeText(portalUrl).catch(() => undefined);
-    setCopiedTokenId(leadId);
-    setTimeout(() => setCopiedTokenId(null), 2000);
+  const handleCopyPortalLink = async (leadId: string) => {
+    try {
+      const response = await apiFetch(`/api/leads/${leadId}/portal-token`, { method: 'POST' });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.token) throw new Error(data.error || 'Não foi possível gerar o link.');
+      const portalUrl = `${window.location.origin}/portal/${data.token}`;
+      await navigator.clipboard.writeText(portalUrl);
+      setCopiedTokenId(leadId);
+      setTimeout(() => setCopiedTokenId(null), 2000);
+    } catch (error) {
+      console.error('Portal link generation failed:', error);
+      window.alert(error instanceof Error ? error.message : 'Não foi possível gerar o link do portal.');
+    }
   };
 
   const handleDelete = (leadId: string) => {
@@ -270,7 +280,7 @@ export const CrmPipelineView: React.FC<CrmPipelineViewProps> = ({
               <div className="flex justify-between items-center">
                 <span className="text-xs font-semibold text-[#5B4FE9]">Link do Portal do Cliente (White-label)</span>
                 <button
-                  onClick={() => handleCopyPortalLink(selectedLeadModal.clientPortalToken, selectedLeadModal.id)}
+                  onClick={() => void handleCopyPortalLink(selectedLeadModal.id)}
                   className="px-3 py-1 bg-[#5B4FE9] text-white rounded-full text-xs font-medium flex items-center gap-1 shadow-2xs"
                 >
                   {copiedTokenId === selectedLeadModal.id ? <Check size={12} /> : <Copy size={12} />}

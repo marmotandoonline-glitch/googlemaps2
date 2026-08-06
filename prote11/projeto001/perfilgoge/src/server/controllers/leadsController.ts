@@ -18,12 +18,20 @@ export async function getLeads(req: Request, res: Response) {
     ];
   }
 
-  const leads = await prisma.lead.findMany({
-    where,
-    orderBy: { createdAt: 'desc' },
-    take: 200,
-  });
-  res.json(leads);
+  try {
+    const leads = await prisma.lead.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+    });
+    res.json(leads);
+  } catch (err: any) {
+    console.error('Failed to list leads:', err);
+    res.status(503).json({
+      error: 'Banco de dados indisponível ou migrações pendentes.',
+      code: err?.code || 'LEADS_QUERY_FAILED',
+    });
+  }
 }
 
 // POST /api/leads
@@ -89,37 +97,63 @@ export async function searchLeads(req: Request, res: Response) {
 
   const cityName = city || 'São Paulo';
   const searchTerm = niche || 'loja';
+  const safeSearchTerm = searchTerm.replace(/[\\"\\\\|()]/g, ' ').trim() || 'loja';
+  const safeCityName = cityName.replace(/[\\"\\\\]/g, ' ').trim();
 
-  // Build Overpass API query for OpenStreetMap (100% Free)
+  // Build Overpass API query for OpenStreetMap (100% Free).
   const overpassQuery = `
-    [out:json][timeout:25];
-    area[name="${cityName}"]->.searchArea;
+    [out:json][timeout:20];
+    area[name="${safeCityName}"]->.searchArea;
     (
-      node["amenity"~"${searchTerm}|restaurant|cafe|clinic|dentist|pharmacy|bank|gym", i](area.searchArea);
-      node["shop"~"${searchTerm}|supermarket|bakery|clothes|mall", i](area.searchArea);
-      node["craft"~"${searchTerm}", i](area.searchArea);
-      way["amenity"~"${searchTerm}|restaurant|cafe|clinic|dentist|pharmacy", i](area.searchArea);
-      way["shop"~"${searchTerm}", i](area.searchArea);
+      node["amenity"~"${safeSearchTerm}|restaurant|cafe|clinic|dentist|pharmacy|bank|gym", i](area.searchArea);
+      node["shop"~"${safeSearchTerm}|supermarket|bakery|clothes|mall", i](area.searchArea);
+      node["craft"~"${safeSearchTerm}", i](area.searchArea);
+      way["amenity"~"${safeSearchTerm}|restaurant|cafe|clinic|dentist|pharmacy", i](area.searchArea);
+      way["shop"~"${safeSearchTerm}", i](area.searchArea);
     );
     out body;
     >;
     out skel qt;
   `;
 
-  const url = 'https://overpass-api.de/api/interpreter';
+  const overpassEndpoints = [
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+    'https://overpass.private.coffee/api/interpreter',
+  ];
 
-  let r;
-  try {
-    r = await fetch(url, {
-      method: 'POST',
-      body: `data=${encodeURIComponent(overpassQuery)}`,
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    });
-  } catch (err: any) {
-    return res.status(503).json({ error: 'Erro ao conectar ao motor de busca OpenStreetMap', details: err?.message });
+  let json: any = null;
+  let lastError = 'Nenhum servidor Overpass respondeu.';
+  for (const url of overpassEndpoints) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        body: `data=${encodeURIComponent(overpassQuery)}`,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        signal: controller.signal,
+      });
+      if (!response.ok) {
+        lastError = `Servidor Overpass respondeu HTTP ${response.status}`;
+        continue;
+      }
+      const candidate = await response.json() as any;
+      if (candidate && Array.isArray(candidate.elements)) {
+        json = candidate;
+        break;
+      }
+      lastError = 'Resposta inválida do servidor Overpass.';
+    } catch (err: any) {
+      lastError = err?.name === 'AbortError' ? 'Tempo limite do servidor Overpass excedido.' : (err?.message || lastError);
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
-  const json = (await r.json()) as any;
+  if (!json) {
+    return res.status(503).json({ error: 'Os servidores de busca OpenStreetMap estão indisponíveis no momento.', details: lastError });
+  }
 
   if (!json || !Array.isArray(json.elements) || json.elements.length === 0) {
     return res.json({ query: { niche, city, neighborhood, state }, totalFound: 0, results: [] });
@@ -134,8 +168,8 @@ export async function searchLeads(req: Request, res: Response) {
     const website = tags.website || tags['contact:website'] || '';
     const photosCount = Math.floor(2 + Math.random() * 12);
     
-    // Simulate WhatsApp compatible phone or generate one for valid candidates
-    const phone = rawPhone || (Math.random() > 0.3 ? `+55 11 9${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}` : '');
+    // Não inventar telefone: só retornamos contatos realmente presentes no OpenStreetMap.
+    const phone = rawPhone;
 
     const leadCandidate = {
       name: tags.name || 'Estabelecimento Local',
@@ -186,6 +220,23 @@ export async function searchLeads(req: Request, res: Response) {
   }).slice(0, 30);
 
   res.json({ query: { niche, city, neighborhood, state }, totalFound: results.length, results });
+}
+
+// POST /api/leads/:id/portal-token
+// Gera um token público real para leads antigos, mockados ou sem token válido.
+export async function ensurePortalToken(req: Request, res: Response) {
+  const { id } = req.params;
+  const lead = await prisma.lead.findUnique({ where: { id } });
+  if (!lead) return res.status(404).json({ error: 'Lead not found' });
+
+  try {
+    const { token, expiresAt } = await createPortalToken(id, 168);
+    await prisma.lead.update({ where: { id }, data: { clientPortalToken: token } as any });
+    res.json({ token, expiresAt });
+  } catch (err: any) {
+    console.error('Failed to generate portal token:', err);
+    res.status(500).json({ error: 'Não foi possível gerar o link do portal.' });
+  }
 }
 
 // GET /api/leads/:id
