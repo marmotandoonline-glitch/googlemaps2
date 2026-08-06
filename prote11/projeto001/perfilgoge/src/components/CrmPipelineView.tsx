@@ -33,16 +33,16 @@ interface CrmPipelineViewProps {
 }
 
 const STAGES: { key: PipelineStage; label: string; color: string }[] = [
-  { key: 'novo', label: 'Novo Lead', color: 'bg-slate-500' },
-  { key: 'analisado', label: 'Analisado', color: 'bg-blue-500' },
+  { key: 'novo', label: 'Novo Lead', color: 'bg-slate-400' },
+  { key: 'analisado', label: 'Analisado', color: 'bg-slate-500' },
   { key: 'contato_enviado', label: 'Contato Enviado', color: 'bg-amber-500' },
   { key: 'respondeu', label: 'Respondeu', color: 'bg-orange-500' },
-  { key: 'negociacao', label: 'Em Negociação', color: 'bg-purple-500' },
-  { key: 'fechado', label: 'Fechado / Ganho', color: 'bg-emerald-500' },
-  { key: 'onboarding', label: 'Onboarding', color: 'bg-cyan-500' },
-  { key: 'producao', label: 'Em Produção', color: 'bg-indigo-500' },
-  { key: 'entregue', label: 'Entregue', color: 'bg-[#4285F4]' },
-  { key: 'mensalista', label: 'Mensalista', color: 'bg-[#34A853]' },
+  { key: 'negociacao', label: 'Em Negociação', color: 'bg-[#5B4FE9]' },
+  { key: 'fechado', label: 'Fechado / Ganho', color: 'bg-[#1F9254]' },
+  { key: 'onboarding', label: 'Onboarding', color: 'bg-[#1F9254]' },
+  { key: 'producao', label: 'Em Produção', color: 'bg-[#5B4FE9]' },
+  { key: 'entregue', label: 'Entregue', color: 'bg-[#1F9254]' },
+  { key: 'mensalista', label: 'Mensalista', color: 'bg-[#1F9254]' },
 ];
 
 export const CrmPipelineView: React.FC<CrmPipelineViewProps> = ({
@@ -60,7 +60,6 @@ export const CrmPipelineView: React.FC<CrmPipelineViewProps> = ({
   const [newNote, setNewNote] = useState('');
   const [copiedTokenId, setCopiedTokenId] = useState<string | null>(null);
 
-  // Filtered leads
   const filteredLeads = leads.filter((l) => {
     const matchesSearch =
       l.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -72,7 +71,6 @@ export const CrmPipelineView: React.FC<CrmPipelineViewProps> = ({
 
   const categories = Array.from(new Set(leads.map((l) => l.category)));
 
-  // FIXED: Generate portal URL using path parameter format to match PortalPage route
   const handleCopyPortalLink = (token: string, leadId: string) => {
     const portalUrl = `${window.location.origin}/portal/${token}`;
     navigator.clipboard.writeText(portalUrl);
@@ -90,30 +88,30 @@ export const CrmPipelineView: React.FC<CrmPipelineViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-4">
+      <div className="bg-white rounded-[20px] border border-[#E7E7F1] p-6 shadow-2xs space-y-4">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
           <div>
-            <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-              <Building2 size={22} className="text-indigo-600" />
+            <h2 className="text-lg font-semibold text-[#16162B] flex items-center gap-2">
+              <Building2 size={20} className="text-[#5B4FE9]" />
               CRM Pipeline
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">{filteredLeads.length} leads no pipeline</p>
+            <p className="text-xs text-[#8A8AA3] mt-0.5">{filteredLeads.length} leads no pipeline</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <div className="relative">
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8A8AA3]" />
               <input
                 type="text"
                 placeholder="Buscar por nome, categoria, cidade..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs w-64 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                className="pl-9 pr-3 py-1.5 bg-[#ECEDF7]/50 border border-[#E2E2EE] rounded-full text-xs w-64 focus:ring-2 focus:ring-[#5B4FE9] focus:outline-none"
               />
             </div>
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold"
+              className="px-3 py-1.5 bg-white border border-[#E2E2EE] rounded-full text-xs font-medium text-[#16162B]"
             >
               <option value="todos">Todas categorias</option>
               {categories.map((c) => (
@@ -125,47 +123,54 @@ export const CrmPipelineView: React.FC<CrmPipelineViewProps> = ({
       </div>
 
       {/* Kanban Board */}
-      <div className="flex gap-3 overflow-x-auto pb-4 min-h-[500px]">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {STAGES.map((stage) => {
           const stageLeads = filteredLeads.filter((l) => l.stage === stage.key);
+
           return (
-            <div key={stage.key} className="flex-shrink-0 w-72">
-              <div className="bg-slate-200/60 dark:bg-slate-800/60 rounded-xl p-3 space-y-3">
+            <div key={stage.key} className="bg-white border border-[#E7E7F1] rounded-[20px] p-4 shadow-2xs flex flex-col space-y-3 min-h-[500px]">
+              <div className="flex items-center justify-between border-b border-[#E7E7F1] pb-2">
                 <div className="flex items-center gap-2">
                   <div className={`w-2.5 h-2.5 rounded-full ${stage.color}`} />
-                  <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300">{stage.label}</h3>
-                  <span className="text-[10px] bg-slate-300 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded-full font-bold">{stageLeads.length}</span>
+                  <span className="font-semibold text-xs text-[#16162B]">{stage.label}</span>
                 </div>
+                <span className="text-[10px] bg-[#ECEDF7] text-[#16162B] font-mono px-2 py-0.5 rounded-full font-bold">
+                  {stageLeads.length}
+                </span>
+              </div>
 
-                {stageLeads.map((lead) => (
-                  <div
-                    key={lead.id}
-                    onClick={() => setSelectedLeadModal(lead)}
-                    className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-indigo-400 transition-colors space-y-2"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-tight">{lead.name}</h4>
-                      <span className="text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 px-1.5 py-0.5 rounded flex-shrink-0">
-                        {lead.score || 0}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-500">{lead.category}</p>
-                    <div className="flex items-center gap-3 text-[10px] text-slate-400">
-                      {lead.city && <span>{lead.city}</span>}
-                      {lead.rating > 0 && (
-                        <span className="flex items-center gap-0.5">
-                          <Star size={10} className="fill-amber-400 text-amber-400" /> {lead.rating}
+              <div className="flex-1 space-y-2.5 overflow-y-auto max-h-[600px] pr-1">
+                {stageLeads.length === 0 ? (
+                  <div className="text-center py-12 text-[#8A8AA3] text-xs italic">Nenhum lead</div>
+                ) : (
+                  stageLeads.map((lead) => (
+                    <div
+                      key={lead.id}
+                      onClick={() => setSelectedLeadModal(lead)}
+                      className="bg-[#ECEDF7]/30 hover:bg-[#ECEDF7]/70 border border-[#E2E2EE] p-3 rounded-xl cursor-pointer transition-all space-y-2 group"
+                    >
+                      <div className="flex justify-between items-start">
+                        <h4 className="font-semibold text-xs text-[#16162B] group-hover:text-[#5B4FE9] transition-colors line-clamp-1">
+                          {lead.name}
+                        </h4>
+                        <span className="text-[10px] font-mono bg-white border border-[#E2E2EE] text-[#16162B] px-1.5 py-0.2 rounded-full">
+                          {lead.score} pts
                         </span>
-                      )}
-                      {lead.reviewsCount > 0 && <span>{lead.reviewsCount} reviews</span>}
-                    </div>
-                  </div>
-                ))}
+                      </div>
 
-                {stageLeads.length === 0 && (
-                  <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-6 text-center">
-                    <p className="text-[11px] text-slate-400">Nenhum lead</p>
-                  </div>
+                      <div className="text-[11px] text-[#8A8AA3] space-y-0.5">
+                        <div className="truncate">{lead.category}</div>
+                        <div className="truncate">{lead.city} • {lead.rating}★</div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-1 border-t border-[#E2E2EE] text-[10px] text-[#8A8AA3]">
+                        <span>{lead.reviewsCount} reviews</span>
+                        <span className="text-[#5B4FE9] font-medium flex items-center gap-0.5">
+                          Detalhes <ChevronRight size={10} />
+                        </span>
+                      </div>
+                    </div>
+                  ))
                 )}
               </div>
             </div>
@@ -173,167 +178,152 @@ export const CrmPipelineView: React.FC<CrmPipelineViewProps> = ({
         })}
       </div>
 
-      {/* Lead Detail Modal */}
+      {/* Modal de Detalhes do Lead */}
       {selectedLeadModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setSelectedLeadModal(null)}>
-          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-5" onClick={(e) => e.stopPropagation()}>
-            {/* Header */}
-            <div className="flex justify-between items-start">
+        <div className="fixed inset-0 bg-[#16162B]/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white border border-[#E7E7F1] rounded-[24px] max-w-2xl w-full p-6 space-y-6 shadow-xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start border-b border-[#E7E7F1] pb-4">
               <div>
-                <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">{selectedLeadModal.name}</h3>
-                <p className="text-xs text-slate-500">{selectedLeadModal.category} • Score: {selectedLeadModal.score}</p>
+                <span className="text-[10px] font-mono bg-[#ECEDF7] text-[#5B4FE9] px-2 py-0.5 rounded-full font-bold">
+                  Score {selectedLeadModal.score} / 100
+                </span>
+                <h3 className="text-xl font-bold text-[#16162B] mt-1">{selectedLeadModal.name}</h3>
+                <p className="text-xs text-[#8A8AA3]">{selectedLeadModal.category} • {selectedLeadModal.address}, {selectedLeadModal.city}</p>
               </div>
-              <button onClick={() => setSelectedLeadModal(null)} className="text-slate-400 hover:text-slate-700 dark:hover:text-white text-xl">&times;</button>
-            </div>
-
-            {/* Quick Info */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {selectedLeadModal.phone && (
-                <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
-                  <Phone size={14} className="text-slate-400 mb-1" />
-                  <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{selectedLeadModal.phone}</p>
-                </div>
-              )}
-              {selectedLeadModal.website && (
-                <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
-                  <Globe size={14} className="text-slate-400 mb-1" />
-                  <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate">{selectedLeadModal.website}</p>
-                </div>
-              )}
-              {selectedLeadModal.rating > 0 && (
-                <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
-                  <Star size={14} className="text-slate-400 mb-1" />
-                  <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{selectedLeadModal.rating} ({selectedLeadModal.reviewsCount} reviews)</p>
-                </div>
-              )}
-              {selectedLeadModal.dealValue && (
-                <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
-                  <DollarSign size={14} className="text-slate-400 mb-1" />
-                  <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">R$ {selectedLeadModal.dealValue}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-wrap gap-2">
-              {/* Portal Link Button - FIXED to use path parameter format */}
               <button
-                onClick={() => handleCopyPortalLink(selectedLeadModal.clientPortalToken, selectedLeadModal.id)}
-                className="py-2 px-4 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg flex items-center gap-1.5"
+                onClick={() => setSelectedLeadModal(null)}
+                className="text-[#8A8AA3] hover:text-[#16162B] text-sm p-1 rounded-full hover:bg-[#ECEDF7]"
               >
-                {copiedTokenId === selectedLeadModal.id ? <><Check size={14} /> Link Copiado!</> : <><ExternalLink size={14} /> Link Portal Cliente</>}
-              </button>
-
-              <button
-                onClick={() => { onSelectLeadForProposal(selectedLeadModal); setSelectedLeadModal(null); }}
-                className="py-2 px-4 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg flex items-center gap-1.5"
-              >
-                <MessageSquare size={14} /> Proposta WhatsApp
-              </button>
-              <button
-                onClick={() => { onSelectLeadForAi(selectedLeadModal); setSelectedLeadModal(null); }}
-                className="py-2 px-4 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-lg flex items-center gap-1.5"
-              >
-                <Sparkles size={14} /> Gerar IA
-              </button>
-              <button
-                onClick={() => { onSelectLeadForReport(selectedLeadModal); setSelectedLeadModal(null); }}
-                className="py-2 px-4 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg flex items-center gap-1.5"
-              >
-                <FileText size={14} /> Relatório
-              </button>
-              <button
-                onClick={() => handleDelete(selectedLeadModal.id)}
-                className="py-2 px-4 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 ml-auto"
-              >
-                <Trash2 size={14} /> Excluir
+                ✕
               </button>
             </div>
 
-            {/* Stage Selector */}
-            <div>
-              <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Alterar Estágio</h4>
-              <div className="flex flex-wrap gap-1.5">
-                {STAGES.map((s) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div className="space-y-2 bg-[#ECEDF7]/30 p-4 rounded-xl border border-[#E2E2EE]">
+                <div className="font-semibold text-[#16162B]">Contato & Mídia</div>
+                <div>Telefone: <span className="font-mono text-[#8A8AA3]">{selectedLeadModal.phone || 'Não informado'}</span></div>
+                <div>WhatsApp: <span className="font-mono text-[#8A8AA3]">{selectedLeadModal.whatsapp || selectedLeadModal.phone || 'N/A'}</span></div>
+                <div>Website: <span className="font-mono text-[#8A8AA3]">{selectedLeadModal.website || 'Sem site (Oportunidade)'}</span></div>
+                <div>Avaliações: <span className="font-mono text-[#8A8AA3]">{selectedLeadModal.reviewsCount} ({selectedLeadModal.rating}★)</span></div>
+              </div>
+
+              <div className="space-y-2 bg-[#ECEDF7]/30 p-4 rounded-xl border border-[#E2E2EE]">
+                <div className="font-semibold text-[#16162B]">Ações Comerciais</div>
+                <div className="space-y-2 pt-1">
                   <button
-                    key={s.key}
-                    onClick={() => { onUpdateLeadStage(selectedLeadModal.id, s.key); setSelectedLeadModal({ ...selectedLeadModal, stage: s.key }); }}
-                    className={`px-3 py-1.5 text-[11px] font-bold rounded-lg transition-colors ${
-                      selectedLeadModal.stage === s.key
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950'
-                    }`}
+                    onClick={() => { setSelectedLeadModal(null); onSelectLeadForProposal(selectedLeadModal); }}
+                    className="w-full py-2 bg-[#5B4FE9] hover:bg-[#4C3FDB] text-white rounded-full font-medium flex items-center justify-center gap-1.5 shadow-2xs"
                   >
-                    {s.label}
+                    <MessageSquare size={14} /> Gerar Proposta WhatsApp
                   </button>
+                  <button
+                    onClick={() => { setSelectedLeadModal(null); onSelectLeadForAi(selectedLeadModal); }}
+                    className="w-full py-2 bg-white border border-[#E2E2EE] hover:bg-[#ECEDF7]/50 text-[#16162B] rounded-full font-medium flex items-center justify-center gap-1.5 shadow-2xs"
+                  >
+                    <Sparkles size={14} className="text-[#5B4FE9]" /> Motor de IA & Posts
+                  </button>
+                  <button
+                    onClick={() => { setSelectedLeadModal(null); onSelectLeadForReport(selectedLeadModal); }}
+                    className="w-full py-2 bg-white border border-[#E2E2EE] hover:bg-[#ECEDF7]/50 text-[#16162B] rounded-full font-medium flex items-center justify-center gap-1.5 shadow-2xs"
+                  >
+                    <FileText size={14} className="text-[#1F9254]" /> Relatório Diagnóstico PDF
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Mudar Estágio */}
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-[#16162B]">Mudar Estágio no Pipeline</label>
+              <select
+                value={selectedLeadModal.stage}
+                onChange={(e) => {
+                  const newStage = e.target.value as PipelineStage;
+                  onUpdateLeadStage(selectedLeadModal.id, newStage);
+                  setSelectedLeadModal({ ...selectedLeadModal, stage: newStage });
+                }}
+                className="w-full px-3 py-2 bg-white border border-[#E2E2EE] rounded-xl text-xs font-medium text-[#16162B]"
+              >
+                {STAGES.map((s) => (
+                  <option key={s.key} value={s.key}>{s.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Portal do Cliente Link */}
+            <div className="space-y-2 bg-[#F1F0FC] p-4 rounded-xl border border-[#5B4FE9]/20">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-semibold text-[#5B4FE9]">Link do Portal do Cliente (White-label)</span>
+                <button
+                  onClick={() => handleCopyPortalLink(selectedLeadModal.portalToken, selectedLeadModal.id)}
+                  className="px-3 py-1 bg-[#5B4FE9] text-white rounded-full text-xs font-medium flex items-center gap-1 shadow-2xs"
+                >
+                  {copiedTokenId === selectedLeadModal.id ? <Check size={12} /> : <Copy size={12} />}
+                  {copiedTokenId === selectedLeadModal.id ? 'Copiado!' : 'Copiar Link'}
+                </button>
+              </div>
+              <p className="text-[11px] text-[#8A8AA3] font-mono break-all">
+                {window.location.origin}/portal/{selectedLeadModal.portalToken}
+              </p>
+            </div>
+
+            {/* Notas e Histórico */}
+            <div className="space-y-3">
+              <h4 className="font-semibold text-xs text-[#16162B]">Notas & Atividades</h4>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {selectedLeadModal.notes.map((note) => (
+                  <div key={note.id} className="p-3 bg-[#ECEDF7]/30 rounded-xl border border-[#E2E2EE] text-xs space-y-1">
+                    <div className="flex justify-between text-[10px] text-[#8A8AA3]">
+                      <span className="font-semibold text-[#5B4FE9]">{note.author}</span>
+                      <span>{note.createdAt}</span>
+                    </div>
+                    <p className="text-[#16162B]">{note.text}</p>
+                  </div>
                 ))}
               </div>
-            </div>
 
-            {/* Add Note */}
-            <div className="space-y-2">
-              <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300">Adicionar Nota</h4>
-              <div className="flex gap-2">
+              <div className="flex gap-2 pt-2">
                 <input
                   type="text"
+                  placeholder="Adicionar nota interna..."
                   value={newNote}
                   onChange={(e) => setNewNote(e.target.value)}
-                  placeholder="Digite uma nota sobre este lead..."
-                  className="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs"
+                  className="flex-1 px-3 py-2 bg-white border border-[#E2E2EE] rounded-full text-xs focus:ring-2 focus:ring-[#5B4FE9] focus:outline-none"
                 />
                 <button
                   onClick={() => {
-                    if (newNote.trim()) {
-                      onAddNote(selectedLeadModal.id, newNote.trim());
-                      setNewNote('');
-                      setSelectedLeadModal({
-                        ...selectedLeadModal,
-                        notes: [{ id: `note-${Date.now()}`, author: 'Operador', text: newNote.trim(), createdAt: new Date().toISOString().slice(0, 16).replace('T', ' ') }, ...selectedLeadModal.notes],
-                      });
-                    }
+                    if (!newNote.trim()) return;
+                    onAddNote(selectedLeadModal.id, newNote);
+                    setSelectedLeadModal({
+                      ...selectedLeadModal,
+                      notes: [
+                        { id: `n-${Date.now()}`, author: 'Operador', text: newNote, createdAt: new Date().toISOString().slice(0, 16).replace('T', ' ') },
+                        ...selectedLeadModal.notes,
+                      ],
+                    });
+                    setNewNote('');
                   }}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-lg"
+                  className="px-4 py-2 bg-[#5B4FE9] text-white rounded-full text-xs font-medium shadow-2xs"
                 >
-                  Enviar
+                  Adicionar
                 </button>
               </div>
             </div>
 
-            {/* Notes */}
-            {selectedLeadModal.notes && selectedLeadModal.notes.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300">Notas ({selectedLeadModal.notes.length})</h4>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {selectedLeadModal.notes.map((note) => (
-                    <div key={note.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-[10px] font-bold text-indigo-600">{note.author}</span>
-                        <span className="text-[10px] text-slate-400">{note.createdAt}</span>
-                      </div>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-300">{note.text}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* History */}
-            {selectedLeadModal.history && selectedLeadModal.history.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300">Histórico de Atividades</h4>
-                <div className="space-y-1.5 max-h-40 overflow-y-auto">
-                  {selectedLeadModal.history.map((event, idx) => (
-                    <div key={idx} className="flex items-start gap-2 text-[11px]">
-                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 flex-shrink-0" />
-                      <div>
-                        <p className="text-slate-700 dark:text-slate-300">{event.description}</p>
-                        <p className="text-slate-400 text-[10px]">{event.timestamp}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            <div className="flex justify-between items-center pt-4 border-t border-[#E7E7F1]">
+              <button
+                onClick={() => handleDelete(selectedLeadModal.id)}
+                className="px-3 py-1.5 bg-[#FDEAF0] text-[#D6336C] rounded-full text-xs font-medium flex items-center gap-1"
+              >
+                <Trash2 size={13} /> Excluir Lead
+              </button>
+              <button
+                onClick={() => setSelectedLeadModal(null)}
+                className="px-4 py-2 bg-white border border-[#E2E2EE] rounded-full text-xs font-medium text-[#16162B]"
+              >
+                Fechar
+              </button>
+            </div>
           </div>
         </div>
       )}
