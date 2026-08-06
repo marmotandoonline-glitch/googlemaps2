@@ -86,3 +86,10 @@ O log do Render mostrou que o processo encerrava durante o boot com `Error: Bull
 A correção detecta hosts `*.upstash.io` antes de carregar BullMQ, impede a inicialização do worker incompatível, mantém a API e o login disponíveis e marca jobs de IA como `failed` com mensagem explicativa quando não existe uma fila compatível. O cliente Redis também passa a usar conexão lazy nesse cenário para evitar tentativas e erros repetidos no boot. Com Redis padrão, a fila BullMQ continua habilitada normalmente.
 
 O build de produção passou após a correção. Um teste local simulando `REDIS_URL` do Upstash confirmou que o servidor Express inicia e imprime `PerfilPro server listening`, sem o crash do BullMQ.
+
+
+## Lead Finder indisponível por coluna ausente no banco — 06/08/2026
+
+O Render confirmou `PrismaClientKnownRequestError P2022`: `Lead.estimatedLoss` não existia no banco de produção. A migração inicial contém a coluna, mas o serviço estava sendo iniciado diretamente com `npx tsx src/server/index.ts`, sem garantia de que a migração fosse aplicada ao banco existente.
+
+Foi adicionada uma verificação idempotente no boot em `src/server/lib/ensureSchema.ts`, usando `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` para `estimatedLoss` e `financialExplanation`. O servidor só abre a porta depois dessa verificação. O build completo passou; após o redeploy, a consulta `prisma.lead.findMany()` não deverá mais falhar por essas colunas ausentes.

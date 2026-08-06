@@ -12,6 +12,7 @@ import { authMiddleware } from './middleware/authMiddleware';
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
+import { ensureProductionSchema } from './lib/ensureSchema';
 
 // O worker BullMQ só pode ser carregado com Redis padrão. Upstash é detectado
 // antes da importação porque esta versão do BullMQ encerra o processo no boot.
@@ -111,7 +112,19 @@ if (fs.existsSync(staticPath)) {
   });
 }
 
-app.listen(PORT, () => {
-  console.log(`⚡ PerfilPro server listening on port ${PORT}`);
-  console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+async function startServer() {
+  try {
+    await ensureProductionSchema();
+    console.log('✅ Production schema compatibility check completed');
+  } catch (error) {
+    console.error('❌ Production schema check failed:', error);
+    process.exit(1);
+  }
+
+  app.listen(PORT, () => {
+    console.log(`⚡ PerfilPro server listening on port ${PORT}`);
+    console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
+  });
+}
+
+void startServer();
