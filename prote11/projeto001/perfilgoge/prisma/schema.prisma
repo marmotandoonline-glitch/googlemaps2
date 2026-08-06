@@ -56,8 +56,10 @@ model Lead {
   score             Int?     
   stage             String   @default("novo")
   dealValue         Int?     
-  diagnostic        Json?
-  aiContentMap      Json?
+  diagnostic          Json?
+  aiContentMap        Json?
+  estimatedLoss       Int?
+  financialExplanation String?
   clientPortalToken String?  @unique
   clientPortalData  Json?
   agency            Agency?  @relation(fields: [agencyId], references: [id])

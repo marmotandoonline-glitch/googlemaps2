@@ -99,6 +99,8 @@ export interface Lead {
   score: number;
   stage: PipelineStage;
   dealValue: number;
+  estimatedLoss?: number;
+  financialExplanation?: string;
   diagnostic?: LeadDiagnostic;
   aiContent?: AIContentResult;
   clientPortalData?: ClientPortalData;

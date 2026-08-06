@@ -159,6 +159,26 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ leads, selectedLead, o
           </p>
         </div>
 
+        {/* Financial Leakage Box (Calculadora de Vazamento Financeiro) */}
+        <div className="p-4 bg-gradient-to-r from-rose-50 to-amber-50 rounded-2xl border border-rose-200 space-y-2">
+          <div className="flex items-center justify-between">
+            <h4 className="font-extrabold text-rose-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+              💰 Estimativa de Vazamento Financeiro (Mensal)
+            </h4>
+            <span className="text-[10px] font-bold px-2 py-0.5 bg-rose-600 text-white rounded-full">
+              Oportunidade Perdida
+            </span>
+          </div>
+          <p className="text-lg font-black text-rose-700">
+            {currentLead.estimatedLoss
+              ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(currentLead.estimatedLoss)
+              : 'R$ 4.500'} <span className="text-xs font-medium text-slate-600">/ mês</span>
+          </p>
+          <p className="text-[11px] text-slate-600 leading-relaxed">
+            {currentLead.financialExplanation || 'Estimativa calculada com base no volume de buscas locais, ticket médio do setor e na diferença de cliques por estar fora do Top 3 do Google Maps.'}
+          </p>
+        </div>
+
         {/* Detailed Breakdown */}
         {diag && (
           <div className="space-y-3">

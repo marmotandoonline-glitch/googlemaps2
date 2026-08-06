@@ -32,7 +32,7 @@ export const ProposalsView: React.FC<ProposalsViewProps> = ({
   const [videoUrl, setVideoUrl] = useState(currentLead?.videoUrl || 'https://youtube.com/watch?v=demo123');
   const [copied, setCopied] = useState(false);
 
-  // Generate conditional WhatsApp proposal text based on website & Google business deficiencies
+  // Generate conditional WhatsApp proposal text based on website & Google business deficiencies + Financial Leakage
   const generateDefaultMsg = (lead: Lead | null) => {
     if (!lead) return '';
     const name = lead.name;
@@ -40,34 +40,34 @@ export const ProposalsView: React.FC<ProposalsViewProps> = ({
     const score = lead.score;
     const hasWebsite = Boolean(lead.website && lead.website.length > 5);
     const mainPain = lead.diagnostic?.details.find((d) => d.status === 'critical')?.issue || 'Perfil incompleto';
+    const lossFormatted = lead.estimatedLoss
+      ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(lead.estimatedLoss)
+      : 'R$ 4.500';
 
-    // Regra condicional solicitada:
-    // 1. Se tem site: foca na otimização do Google Meu Negócio.
-    // 2. Se NÃO tem site: oferece ambos (Google Meu Negócio + Landing Page Profissional).
     if (!hasWebsite) {
       return `Olá! Tudo bem? Me chamo Déric, da agência PerfilPro.
 
-Fiz um diagnóstico da *${name}* em ${city} e notei duas oportunidades urgentes para captar mais clientes na região:
-1️⃣ **Google Meu Negócio:** Seu perfil está com Score ${score}/100 (${mainPain}).
-2️⃣ **Ausência de Site Profissional:** Notamos que vocês ainda não possuem um site/landing page para fechar vendas pelo celular.
+Fiz um raio-x digital da *${name}* em ${city} e identificamos que vocês estão deixando de faturar aproximadamente **${lossFormatted}/mês** para concorrentes mais bem posicionados no Google.
 
-Preparamos uma estratégia completa combinando o **Posicionamento no Top 3 do Google Empresas + Criação de uma Landing Page Profissional** de alta conversão.
+Motivos principais:
+1️⃣ **Google Meu Negócio:** Score ${score}/100 (${mainPain}).
+2️⃣ **Ausência de Site Profissional:** Sem landing page para capturar os clientes que buscam no celular.
 
-Gravei um vídeo rápido explicando como funciona:
+Preparamos uma estratégia matadora combinando o **Posicionamento no Top 3 do Google Empresas + Criação de Landing Page Profissional**.
+
+Gravei um vídeo rápido explicando os números:
 🔗 ${videoUrl}
 
 Podemos bater um papo de 5 minutos sobre isso?`;
     } else {
       return `Olá! Tudo bem? Me chamo Déric, da agência PerfilPro.
 
-Fiz um diagnóstico gratuito do perfil da *${name}* no Google Maps de ${city}. Vi que vocês já possuem site (ótimo!), mas o perfil no Google Empresas está com lacunas importantes (Score ${score}/100).
-⚠️ **Ponto crítico:** ${mainPain}
+Fiz um raio-x digital da *${name}* em ${city}. Vi que vocês já possuem site (ótimo!), mas por estarem fora do Top 3 do Google Maps, estimamos que estão perdendo cerca de **${lossFormatted}/mês** em pacientes/clientes para a concorrência.
+⚠️ **Ponto crítico no perfil:** ${mainPain} (Score ${score}/100).
 
-Seus concorrentes estão captando os clientes que pesquisam no celular na sua região por falta de otimização no Google Maps.
+Preparamos um plano focado exclusivamente em **Otimização Avançada e Gestão do Google Meu Negócio** para recuperar esse faturamento.
 
-Preparamos um plano focado exclusivamente em **Otimização Avançada e Gestão do Google Meu Negócio** para colocar a *${name}* no Top 3.
-
-Gravei um vídeo rápido mostrando a estratégia:
+Gravei um vídeo mostrando a análise:
 🔗 ${videoUrl}
 
 Podemos bater um papo rápido de 5 minutos sobre isso?`;

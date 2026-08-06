@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { scoreLead } from '../services/scoreService';
 import { createPortalToken } from '../services/tokenService';
+import { calculateFinancialLeakage } from '../services/financialCalculatorService';
 import fetch from 'node-fetch';
 
 // GET /api/leads — filter by agencyId from authenticated user
@@ -38,6 +39,8 @@ export async function createLead(req: Request, res: Response) {
     return res.status(400).json({ error: 'Score must be a number between 0 and 100' });
   }
 
+  const financial = calculateFinancialLeakage(body.category || 'Serviços', body.city || 'São Paulo', 12);
+
   const newLead = await prisma.lead.create({
     data: {
       name: body.name,
@@ -60,6 +63,8 @@ export async function createLead(req: Request, res: Response) {
       score: body.score || 0,
       stage: 'novo',
       dealValue: body.dealValue || 1200,
+      estimatedLoss: financial.estimatedMonthlyLoss,
+      financialExplanation: financial.explanation,
       agencyId: user.agencyId || null,
       clientPortalToken: `token-${Math.random().toString(36).substring(2, 10)}`,
     },
