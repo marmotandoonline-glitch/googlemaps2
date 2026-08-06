@@ -296,7 +296,7 @@ export const CrmPipelineView: React.FC<CrmPipelineViewProps> = ({
             <div className="space-y-3">
               <h4 className="font-semibold text-xs text-[#16162B]">Notas & Atividades</h4>
               <div className="space-y-2 max-h-40 overflow-y-auto">
-                {selectedLeadModal.notes.map((note) => (
+                {(selectedLeadModal.notes ?? []).map((note) => (
                   <div key={note.id} className="p-3 bg-[#ECEDF7]/30 rounded-xl border border-[#E2E2EE] text-xs space-y-1">
                     <div className="flex justify-between text-[10px] text-[#8A8AA3]">
                       <span className="font-semibold text-[#5B4FE9]">{note.author}</span>
@@ -323,7 +323,7 @@ export const CrmPipelineView: React.FC<CrmPipelineViewProps> = ({
                       ...selectedLeadModal,
                       notes: [
                         { id: `n-${Date.now()}`, author: 'Operador', text: newNote, createdAt: new Date().toISOString().slice(0, 16).replace('T', ' ') },
-                        ...selectedLeadModal.notes,
+                        ...(selectedLeadModal.notes ?? []),
                       ],
                     });
                     setNewNote('');
