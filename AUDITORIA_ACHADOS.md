@@ -77,3 +77,12 @@ A compilação de produção foi executada novamente com sucesso, incluindo Pris
 O endpoint publicado `POST /api/auth/login` foi testado diretamente três vezes com as credenciais administrativas fornecidas e retornou HTTP 200 com token JWT válido em todas as tentativas. O health check do Render também retornou HTTP 200. A falha observada no navegador é compatível com cold start ou resposta transitória 502/503/504 do Render, que antes era convertida diretamente na mensagem genérica `Login failed`.
 
 O `AuthProvider` foi corrigido para interpretar respostas JSON e HTML, distinguir credenciais inválidas de indisponibilidade do servidor e repetir automaticamente até três vezes em erros transitórios do Render, com espera progressiva. A compilação de produção foi validada com sucesso.
+
+
+## Crash de produção por BullMQ/Upstash — 06/08/2026
+
+O log do Render mostrou que o processo encerrava durante o boot com `Error: BullMQ: Upstash is not compatible with BullMQ`, originado em `src/server/lib/queue.ts`. Como a fila era importada antes do servidor Express iniciar, o login e todas as rotas ficavam indisponíveis.
+
+A correção detecta hosts `*.upstash.io` antes de carregar BullMQ, impede a inicialização do worker incompatível, mantém a API e o login disponíveis e marca jobs de IA como `failed` com mensagem explicativa quando não existe uma fila compatível. O cliente Redis também passa a usar conexão lazy nesse cenário para evitar tentativas e erros repetidos no boot. Com Redis padrão, a fila BullMQ continua habilitada normalmente.
+
+O build de produção passou após a correção. Um teste local simulando `REDIS_URL` do Upstash confirmou que o servidor Express inicia e imprime `PerfilPro server listening`, sem o crash do BullMQ.

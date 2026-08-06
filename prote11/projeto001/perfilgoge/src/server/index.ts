@@ -13,10 +13,13 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 
-// Inicializa o worker somente quando Redis e a chave de IA estão configurados.
-// Sem essa inicialização, /api/ai/generate cria jobs que nunca saem de queued.
-if (process.env.REDIS_URL && process.env.GEMINI_API_KEY) {
+// O worker BullMQ só pode ser carregado com Redis padrão. Upstash é detectado
+// antes da importação porque esta versão do BullMQ encerra o processo no boot.
+const redisIsUpstash = /\.upstash\.io(?::\d+)?(?:\/|$)/i.test(process.env.REDIS_URL || '');
+if (process.env.REDIS_URL && process.env.GEMINI_API_KEY && !redisIsUpstash) {
   import('./workers/aiWorker').catch((err) => console.error('Falha ao iniciar worker de IA:', err));
+} else if (redisIsUpstash) {
+  console.warn('⚠️ Worker BullMQ desativado: Redis Upstash não é compatível com esta versão.');
 }
 
 const app = express();
