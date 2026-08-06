@@ -14,6 +14,9 @@ import fs from 'fs';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy for Render / Cloudflare
+app.set('trust proxy', 1);
+
 // Security headers
 app.use(helmet());
 
