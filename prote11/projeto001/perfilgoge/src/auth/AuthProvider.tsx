@@ -91,21 +91,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     setLoading(true);
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: 'Login failed' }));
-      setLoading(false);
-      throw new Error(err.error || 'Login failed');
+    let lastError = 'Não foi possível conectar ao servidor de autenticação.';
+
+    // Render pode devolver 502/503 durante o cold start. Repetir apenas erros transitórios.
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const raw = await res.text();
+        let payload: any = {};
+        try { payload = raw ? JSON.parse(raw) : {}; } catch { /* Render pode devolver HTML em 502 */ }
+
+        if (res.ok && payload.token && payload.user) {
+          setToken(payload.token);
+          setUser(payload.user);
+          localStorage.setItem(TOKEN_KEY, payload.token);
+          setLoading(false);
+          return;
+        }
+
+        lastError = payload.error || (res.status >= 500
+          ? 'O servidor está iniciando ou temporariamente indisponível. Tente novamente em alguns segundos.'
+          : 'E-mail ou senha inválidos.');
+        if (![502, 503, 504].includes(res.status)) break;
+      } catch (err: any) {
+        lastError = 'Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.';
+      }
+      if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)));
     }
-    const data = await res.json();
-    setToken(data.token);
-    setUser(data.user);
-    localStorage.setItem(TOKEN_KEY, data.token);
+
     setLoading(false);
+    throw new Error(lastError);
   };
 
   const register = async (agencyName: string, adminEmail: string, adminPassword: string, adminName?: string) => {

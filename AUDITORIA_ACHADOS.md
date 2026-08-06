@@ -70,3 +70,10 @@ A aplicação foi acessada no Render com a conta administrativa fornecida. Foram
 | `GET /api/leads` retornava HTTP 502 em produção. | A chamada autenticada no navegador e por requisição direta retornou a página 502 do Render. | A listagem captura falhas Prisma e retorna JSON HTTP 503. O script de start executa `prisma migrate deploy` antes de iniciar a API, corrigindo o desalinhamento de schema no Render. |
 
 A compilação de produção foi executada novamente com sucesso, incluindo Prisma Client, Vite, TypeScript e `git diff --check`. É necessário publicar o commit e aguardar o redeploy para validar esses mesmos fluxos pós-correção no Render.
+
+
+## Falha de login reportada — 06/08/2026
+
+O endpoint publicado `POST /api/auth/login` foi testado diretamente três vezes com as credenciais administrativas fornecidas e retornou HTTP 200 com token JWT válido em todas as tentativas. O health check do Render também retornou HTTP 200. A falha observada no navegador é compatível com cold start ou resposta transitória 502/503/504 do Render, que antes era convertida diretamente na mensagem genérica `Login failed`.
+
+O `AuthProvider` foi corrigido para interpretar respostas JSON e HTML, distinguir credenciais inválidas de indisponibilidade do servidor e repetir automaticamente até três vezes em erros transitórios do Render, com espera progressiva. A compilação de produção foi validada com sucesso.
