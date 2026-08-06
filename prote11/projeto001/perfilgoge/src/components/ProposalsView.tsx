@@ -97,7 +97,7 @@ export const ProposalsView: React.FC<ProposalsViewProps> = ({
   onSelectLead,
   onUpdateProposalMsg,
 }) => {
-  const currentLead = selectedLead || leads[0];
+  const currentLead = leads.find((lead) => lead.id === selectedLead?.id) || leads[0];
   const [videos, setVideos] = useState<ProposalVideos>(() => parseProposalVideos(currentLead?.videoUrl));
   const [copied, setCopied] = useState(false);
   const [message, setMessage] = useState(currentLead?.customProposalMsg || (currentLead ? buildPersonalizedMessage(currentLead, videos) : ''));
