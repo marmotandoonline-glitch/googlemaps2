@@ -93,3 +93,25 @@ O build de produção passou após a correção. Um teste local simulando `REDIS
 O Render confirmou `PrismaClientKnownRequestError P2022`: `Lead.estimatedLoss` não existia no banco de produção. A migração inicial contém a coluna, mas o serviço estava sendo iniciado diretamente com `npx tsx src/server/index.ts`, sem garantia de que a migração fosse aplicada ao banco existente.
 
 Foi adicionada uma verificação idempotente no boot em `src/server/lib/ensureSchema.ts`, usando `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` para `estimatedLoss` e `financialExplanation`. O servidor só abre a porta depois dessa verificação. O build completo passou; após o redeploy, a consulta `prisma.lead.findMany()` não deverá mais falhar por essas colunas ausentes.
+
+
+## Teste funcional pós-deploy — rodada adicional
+
+- Login e dashboard carregaram com sucesso no deploy atual.
+- Lead Finder permitiu adicionar lead e o CRM carregou dados.
+- Ao abrir detalhes de um lead, o CRM apresentou tela em branco; a causa foi lista de notas ausente. A correção foi aplicada e o modal abriu após o redeploy.
+- Geração de token do portal no CRM produziu URL pública aceita pelo portal.
+- Portal público carregou; o botão Adicionar Foto adicionou URL à lista corretamente.
+- Rank Tracker carregou dados, concluiu a varredura e exibiu resultados. O relatório comercial executou a ação de cópia; a leitura automatizada da área de transferência excedeu o tempo do navegador, sem evidência de falha da aplicação.
+- Motor de IA exibiu corretamente mensagem controlada informando que a fila está desativada por incompatibilidade do Upstash com BullMQ.
+- Propostas WhatsApp copiaram o texto e abriram a URL correta da API do WhatsApp sem enviar mensagem.
+- Relatórios carregou o conteúdo e o botão Imprimir/PDF acionou o fluxo de impressão; a automação aguardou o diálogo nativo e excedeu o tempo, mas a página permaneceu íntegra.
+
+Pendências a verificar: logout, WhatsApp QR e validação detalhada de persistência do formulário do portal.
+
+
+## Teste funcional complementar — WhatsApp QR e logout
+
+A página WhatsApp QR carregou autenticada. O botão de conexão iniciou a sessão, o backend retornou estado `qr_ready` e a interface exibiu um QR Code real. O botão Atualizar Status manteve o estado consistente. Não foi escaneado o código nem alterada uma conta externa.
+
+O logout também foi testado: removeu a sessão e redirecionou para `/login` corretamente. Não foi identificada falha reproduzível nesta rodada nesses dois fluxos.
