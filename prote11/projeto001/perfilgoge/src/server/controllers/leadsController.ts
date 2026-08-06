@@ -171,7 +171,7 @@ export async function searchLeads(req: Request, res: Response) {
     // Fallback rápido: Photon indexa dados do OpenStreetMap e costuma responder
     // mesmo quando uma fila do Overpass está congestionada.
     try {
-      const photonQuery = [searchTerm, neighborhood, cityName, state].filter(Boolean).join(', ');
+      const photonQuery = [niche, neighborhood, cityName, state].filter(Boolean).join(', ');
       const photonController = new AbortController();
       const photonTimeout = setTimeout(() => photonController.abort(), 8000);
       const photonResponse = await fetch(
@@ -217,7 +217,7 @@ export async function searchLeads(req: Request, res: Response) {
     }
 
     try {
-      const nominatimQuery = [searchTerm, neighborhood, cityName, state].filter(Boolean).join(', ');
+      const nominatimQuery = [niche, neighborhood, cityName, state].filter(Boolean).join(', ');
       const nominatimController = new AbortController();
       const nominatimTimeout = setTimeout(() => nominatimController.abort(), 12000);
       const nominatimResponse = await fetch(
