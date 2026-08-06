@@ -1,8 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 
 export const LoginView: React.FC<{ onSwitchToRegister?: () => void }> = ({ onSwitchToRegister }) => {
-  const { login } = useAuth();
+  const { login, user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -14,6 +22,7 @@ export const LoginView: React.FC<{ onSwitchToRegister?: () => void }> = ({ onSwi
     setError(null);
     try {
       await login(email, password);
+      navigate('/dashboard', { replace: true });
     } catch (err: any) {
       setError(err.message || 'Falha ao autenticar');
     } finally {

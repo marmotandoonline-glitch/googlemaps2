@@ -1,8 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 
 export const RegisterView: React.FC<{ onSwitchToLogin?: () => void }> = ({ onSwitchToLogin }) => {
-  const { register } = useAuth();
+  const { register, user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
   const [agencyName, setAgencyName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,6 +24,7 @@ export const RegisterView: React.FC<{ onSwitchToLogin?: () => void }> = ({ onSwi
     setError(null);
     try {
       await register(agencyName, email, password, name || undefined);
+      navigate('/dashboard', { replace: true });
     } catch (err: any) {
       setError(err.message || 'Erro ao registrar');
     } finally {
