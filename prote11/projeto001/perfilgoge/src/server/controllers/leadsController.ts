@@ -151,7 +151,79 @@ export async function searchLeads(req: Request, res: Response) {
     }
   }
 
+  // Fallback: quando o Overpass estiver indisponível, consulta o Nominatim.
+  // O resultado continua sendo real (OpenStreetMap), mas pode não conter telefone.
+  // Não falhamos a pesquisa inteira só porque um provedor de dados está lento.
   if (!json) {
+    try {
+      const nominatimQuery = [searchTerm, neighborhood, cityName, state].filter(Boolean).join(', ');
+      const nominatimController = new AbortController();
+      const nominatimTimeout = setTimeout(() => nominatimController.abort(), 12000);
+      const nominatimResponse = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=30&q=${encodeURIComponent(nominatimQuery)}`,
+        {
+          headers: {
+            Accept: 'application/json',
+            'User-Agent': 'PerfilPro-LeadFinder/1.0 (contacto@perfilpro.com)',
+          },
+          signal: nominatimController.signal,
+        },
+      );
+      clearTimeout(nominatimTimeout);
+
+      if (nominatimResponse.ok) {
+        const nominatimItems = await nominatimResponse.json() as any[];
+        const fallbackResults = nominatimItems
+          .filter((item) => item && item.display_name)
+          .map((item, index) => {
+            const address = item.address || {};
+            const fallbackLead = {
+              name: item.name || item.display_name.split(',')[0] || `${searchTerm} local`,
+              category: niche || 'Comércio local',
+              phone: '',
+              website: '',
+              profileUrl: item.osm_type && item.osm_id
+                ? `https://www.openstreetmap.org/${item.osm_type}/${item.osm_id}`
+                : '',
+              placeId: `nominatim-${item.osm_type || 'place'}-${item.osm_id || index}`,
+              rating: 0,
+              reviewsCount: 0,
+              address: item.display_name,
+              neighborhood: address.suburb || address.neighbourhood || neighborhood || 'Centro',
+              city: address.city || address.town || address.municipality || cityName,
+              state: state || address.state || '',
+              description: `Local encontrado no OpenStreetMap para ${nominatimQuery}.`,
+              photosCount: 0,
+              hasHours: false,
+              hasServices: true,
+              hasProducts: false,
+            };
+            const diag = scoreLead({
+              rating: fallbackLead.rating,
+              reviewsCount: fallbackLead.reviewsCount,
+              photosCount: fallbackLead.photosCount,
+              hasWebsite: false,
+              hasDescription: true,
+              hasHours: false,
+              hasServices: true,
+              hasProducts: false,
+            });
+            return { ...fallbackLead, calculatedScore: diag.totalScore, diagnostic: diag };
+          });
+        return res.json({
+          query: { niche, city, neighborhood, state },
+          totalFound: fallbackResults.length,
+          results: fallbackResults,
+          source: 'nominatim-fallback',
+          notice: 'Resultados obtidos via Nominatim porque os servidores Overpass estavam indisponíveis. Telefones só aparecem quando cadastrados no OpenStreetMap.',
+        });
+      }
+    } catch (fallbackError: any) {
+      lastError = fallbackError?.name === 'AbortError'
+        ? 'Tempo limite do Nominatim excedido.'
+        : (fallbackError?.message || lastError);
+    }
+
     return res.status(503).json({ error: 'Os servidores de busca OpenStreetMap estão indisponíveis no momento.', details: lastError });
   }
 
