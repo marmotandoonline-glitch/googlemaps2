@@ -13,6 +13,8 @@ import {
   ShieldCheck,
   Building2,
   MapPin,
+  Calendar,
+  Settings,
 } from 'lucide-react';
 import { Lead, PipelineStage } from '../types';
 
@@ -87,127 +89,159 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ leads, onSelectLea
 
   return (
     <div className="space-y-6">
-      {/* Top Welcome Banner - Vercel / Linear Style */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 relative overflow-hidden shadow-2xl">
-        <div className="absolute right-0 top-0 opacity-5 translate-x-10 -translate-y-10 text-emerald-400 pointer-events-none">
-          <Building2 size={320} />
+      {/* Stripe Billing Header Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#e2e8f0]">
+        <div>
+          <h1 className="text-2xl font-bold text-[#0a2540] tracking-tight">Billing & Growth</h1>
+          <p className="text-xs text-slate-500 mt-0.5">Visão geral de receita, receita recorrente e performance de clientes locais.</p>
         </div>
-        <div className="relative z-10 max-w-2xl space-y-3">
-          <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-xs font-mono tracking-wide">
-            <ShieldCheck size={14} /> PAINEL OPERACIONAL DA AGÊNCIA
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-            Gestão de Otimização e Prospecção GBP
-          </h1>
-          <p className="text-slate-400 text-sm leading-relaxed font-sans">
-            Monitore o pipeline de vendas, audite perfis locais com IA e automatize propostas comerciais de alto impacto.
-          </p>
-          <div className="pt-2 flex flex-wrap gap-3">
-            <button
-              onClick={() => onNavigateTab('prospect')}
-              className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-lg shadow-emerald-500/10"
-            >
-              <Search size={14} /> Prospectar Novos Leads
-            </button>
-            <button
-              onClick={() => onNavigateTab('leads')}
-              className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold px-4 py-2 rounded-xl text-xs transition-all"
-            >
-              <Users size={14} /> Ver Pipeline CRM ({totalLeads})
-            </button>
-          </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <button className="px-3 py-1.5 bg-white border border-[#e2e8f0] rounded-md text-xs font-medium text-slate-700 hover:bg-slate-50 shadow-2xs flex items-center gap-1.5">
+            <span>All time</span>
+            <ChevronRight size={12} className="rotate-90 text-slate-400" />
+          </button>
+          <button className="px-3 py-1.5 bg-white border border-[#e2e8f0] rounded-md text-xs font-medium text-slate-700 hover:bg-slate-50 shadow-2xs flex items-center gap-1.5">
+            <Calendar size={13} className="text-slate-400" />
+            <span>Jan 1–Sep 10</span>
+          </button>
+          <button className="px-3 py-1.5 bg-white border border-[#e2e8f0] rounded-md text-xs font-medium text-slate-700 hover:bg-slate-50 shadow-2xs flex items-center gap-1.5">
+            <span>Monthly</span>
+            <ChevronRight size={12} className="rotate-90 text-slate-400" />
+          </button>
+          <button
+            onClick={() => onNavigateTab('prospect')}
+            className="px-3 py-1.5 bg-white border border-[#e2e8f0] rounded-md text-xs font-medium text-slate-700 hover:bg-slate-50 shadow-2xs flex items-center gap-1.5"
+          >
+            <Settings size={13} className="text-slate-400" />
+            <span>Configure</span>
+          </button>
         </div>
       </div>
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Metric 1 */}
-        <div className="bg-slate-900 border border-slate-800/80 p-5 rounded-xl shadow-sm space-y-3">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-semibold uppercase tracking-wider font-mono">Total de Leads</span>
-            <div className="p-2 bg-slate-800 text-slate-300 rounded-lg">
-              <Users size={16} />
+      {/* Stripe Growth Cards Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* MRR Card */}
+        <div className="bg-white border border-[#e2e8f0] rounded-xl p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">MRR</span>
+              <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-mono">i</span>
             </div>
+            <span className="text-[11px] text-slate-400 font-mono">Data as of Sep 9</span>
           </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-black text-white">{totalLeads}</span>
-            <span className="text-xs text-emerald-400 font-mono flex items-center gap-0.5">
-              <TrendingUp size={12} /> Ativos
-            </span>
-          </div>
-          <p className="text-xs text-slate-400">{leadsInNegotiation} em negociação ativa</p>
-        </div>
 
-        {/* Metric 2 */}
-        <div className="bg-slate-900 border border-slate-800/80 p-5 rounded-xl shadow-sm space-y-3">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-semibold uppercase tracking-wider font-mono">Receita em Carteira</span>
-            <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg">
-              <DollarSign size={16} />
-            </div>
-          </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-black text-white">
+          <div className="flex items-baseline gap-3">
+            <span className="text-3xl font-extrabold text-[#0a2540]">
               R$ {totalRevenue.toLocaleString('pt-BR')}
             </span>
-            <span className="text-xs text-emerald-400 font-mono">Contratos</span>
-          </div>
-          <p className="text-xs text-slate-400">MRR Mensalistas: R$ {mrr.toLocaleString('pt-BR')}/mês</p>
-        </div>
-
-        {/* Metric 3 */}
-        <div className="bg-slate-900 border border-slate-800/80 p-5 rounded-xl shadow-sm space-y-3">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-semibold uppercase tracking-wider font-mono">Score Médio Oportunidades</span>
-            <div className="p-2 bg-amber-500/10 text-amber-400 rounded-lg">
-              <Star size={16} />
-            </div>
-          </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-black text-white">{avgScore} / 100</span>
-            <span
-              className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
-                avgScore < 50
-                  ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                  : avgScore < 75
-                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-              }`}
-            >
-              {avgScore < 50 ? 'Alto Potencial' : 'Moderado'}
+            <span className="text-xs font-semibold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded flex items-center gap-0.5">
+              <TrendingUp size={12} /> +55.9%
             </span>
           </div>
-          <p className="text-xs text-slate-400">Menor score = maior dor do cliente</p>
-        </div>
 
-        {/* Metric 4 */}
-        <div className="bg-slate-900 border border-slate-800/80 p-5 rounded-xl shadow-sm space-y-3">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-semibold uppercase tracking-wider font-mono">Operação & Mensalistas</span>
-            <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg">
-              <CheckCircle2 size={16} />
+          <p className="text-xs text-slate-500">
+            MRR Recorrente (Mensalistas): <span className="font-bold text-[#0a2540]">R$ {mrr.toLocaleString('pt-BR')}/mês</span>
+          </p>
+
+          {/* Simulated Stripe Chart */}
+          <div className="pt-4 border-t border-[#f0f4f8]">
+            <div className="h-28 w-full bg-[#f8fafc] rounded-lg border border-[#e2e8f0] p-3 flex flex-col justify-between relative overflow-hidden">
+              <div className="absolute inset-0 flex items-end px-3">
+                <svg className="w-full h-20 text-[#635bff] overflow-visible" fill="none" viewBox="0 0 300 80">
+                  <path
+                    d="M 0 70 Q 75 55 150 35 T 300 15"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M 0 70 Q 75 55 150 35 T 300 15 L 300 80 L 0 80 Z"
+                    fill="url(#grad)"
+                    opacity="0.1"
+                  />
+                  <defs>
+                    <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#635bff" />
+                      <stop offset="100%" stopColor="#635bff" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+              <div className="flex justify-between text-[10px] text-slate-400 font-mono z-10">
+                <span>Jan 1</span>
+                <span>Sep 9</span>
+              </div>
             </div>
           </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-black text-white">{monthlyClients} Clientes</span>
-            <span className="text-xs text-blue-400 font-mono">{leadsInProduction} em produção</span>
+        </div>
+
+        {/* Active Subscribers Card */}
+        <div className="bg-white border border-[#e2e8f0] rounded-xl p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">Active subscribers</span>
+              <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-mono">i</span>
+            </div>
+            <span className="text-[11px] text-slate-400 font-mono">Data as of Sep 9</span>
           </div>
-          <p className="text-xs text-slate-400">Recorrência garantida com relatórios</p>
+
+          <div className="flex items-baseline gap-3">
+            <span className="text-3xl font-extrabold text-[#0a2540]">{totalLeads}</span>
+            <span className="text-xs font-semibold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded flex items-center gap-0.5">
+              <TrendingUp size={12} /> +55.6%
+            </span>
+          </div>
+
+          <p className="text-xs text-slate-500">
+            Leads em Negociação & Produção: <span className="font-bold text-[#0a2540]">{leadsInNegotiation + leadsInProduction} ativos</span>
+          </p>
+
+          {/* Simulated Stripe Chart 2 */}
+          <div className="pt-4 border-t border-[#f0f4f8]">
+            <div className="h-28 w-full bg-[#f8fafc] rounded-lg border border-[#e2e8f0] p-3 flex flex-col justify-between relative overflow-hidden">
+              <div className="absolute inset-0 flex items-end px-3">
+                <svg className="w-full h-20 text-[#635bff] overflow-visible" fill="none" viewBox="0 0 300 80">
+                  <path
+                    d="M 0 65 Q 100 45 200 25 T 300 10"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M 0 65 Q 100 45 200 25 T 300 10 L 300 80 L 0 80 Z"
+                    fill="url(#grad2)"
+                    opacity="0.1"
+                  />
+                  <defs>
+                    <linearGradient id="grad2" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#635bff" />
+                      <stop offset="100%" stopColor="#635bff" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+              <div className="flex justify-between text-[10px] text-slate-400 font-mono z-10">
+                <span>Jan 1</span>
+                <span>Sep 9</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: Funnel Distribution */}
-        <div className="lg:col-span-2 bg-slate-900 border border-slate-800/80 p-6 rounded-xl shadow-sm space-y-4">
+      {/* Second Row: Funnel and Opportunities */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">
+        {/* Funnel distribution */}
+        <div className="lg:col-span-2 bg-white border border-[#e2e8f0] rounded-xl p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-bold text-white text-sm">Distribuição do Funil de Vendas</h3>
-              <p className="text-xs text-slate-400">Status atual das empresas registradas no CRM</p>
+              <h3 className="font-bold text-[#0a2540] text-sm">Distribuição do Funil de Vendas</h3>
+              <p className="text-xs text-slate-500">Status atual das empresas registradas no CRM</p>
             </div>
             <button
               onClick={() => onNavigateTab('leads')}
-              className="text-xs text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1"
+              className="text-xs text-[#635bff] hover:underline font-semibold flex items-center gap-1"
             >
               Ver Kanban <ChevronRight size={14} />
             </button>
@@ -221,21 +255,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ leads, onSelectLea
               return (
                 <div key={stage} className="space-y-1 text-xs">
                   <div className="flex justify-between font-medium">
-                    <span className="text-slate-300">{stageLabels[stage]}</span>
-                    <span className="text-slate-400 font-mono">
+                    <span className="text-slate-700">{stageLabels[stage]}</span>
+                    <span className="text-slate-500 font-mono">
                       {count} ({percentage}%)
                     </span>
                   </div>
-                  <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                  <div className="w-full bg-[#f0f4f8] h-2 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all duration-500 ${
                         ['novo', 'analisado'].includes(stage)
-                          ? 'bg-slate-600'
+                          ? 'bg-slate-400'
                           : ['contato_enviado', 'respondeu', 'negociacao'].includes(stage)
                           ? 'bg-amber-500'
                           : ['fechado', 'onboarding', 'producao'].includes(stage)
                           ? 'bg-emerald-500'
-                          : 'bg-blue-500'
+                          : 'bg-[#635bff]'
                       }`}
                       style={{ width: `${percentage}%` }}
                     />
@@ -246,47 +280,47 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ leads, onSelectLea
           </div>
         </div>
 
-        {/* Right: Urgent Leads / Opportunities */}
-        <div className="bg-slate-900 border border-slate-800/80 p-6 rounded-xl shadow-sm space-y-4">
+        {/* Urgent Opportunities */}
+        <div className="bg-white border border-[#e2e8f0] rounded-xl p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-rose-500/10 text-rose-400 rounded-lg border border-rose-500/20">
+              <div className="p-1.5 bg-rose-50 text-rose-600 rounded-md border border-rose-200">
                 <AlertTriangle size={15} />
               </div>
               <div>
-                <h3 className="font-bold text-white text-sm">Maiores Oportunidades</h3>
-                <p className="text-xs text-slate-400">Score de alerta (&lt; 50)</p>
+                <h3 className="font-bold text-[#0a2540] text-sm">Maiores Oportunidades</h3>
+                <p className="text-xs text-slate-500">Score de alerta (&lt; 50)</p>
               </div>
             </div>
           </div>
 
           <div className="space-y-3">
             {highOpportunityLeads.length === 0 ? (
-              <p className="text-xs text-slate-500 italic py-4 text-center">Nenhum lead com falha crítica no momento.</p>
+              <p className="text-xs text-slate-400 italic py-4 text-center">Nenhum lead com falha crítica no momento.</p>
             ) : (
               highOpportunityLeads.map((lead) => (
                 <div
                   key={lead.id}
                   onClick={() => onSelectLead(lead)}
-                  className="p-3 bg-slate-950 hover:bg-slate-800/60 border border-slate-800 rounded-xl cursor-pointer transition-all space-y-2 group"
+                  className="p-3 bg-[#f8fafc] hover:bg-slate-100 border border-[#e2e8f0] rounded-lg cursor-pointer transition-all space-y-2 group"
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="font-bold text-white text-xs group-hover:text-emerald-400 transition-colors">
+                      <h4 className="font-bold text-[#0a2540] text-xs group-hover:text-[#635bff] transition-colors">
                         {lead.name}
                       </h4>
-                      <p className="text-[11px] text-slate-400">
+                      <p className="text-[11px] text-slate-500">
                         {lead.category} • {lead.city}
                       </p>
                     </div>
-                    <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 font-mono font-bold text-[10px] px-2 py-0.5 rounded-full">
+                    <span className="bg-rose-50 text-rose-700 border border-rose-200 font-mono font-bold text-[10px] px-2 py-0.5 rounded-full">
                       Score {lead.score}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800">
+                  <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-[#e2e8f0]">
                     <span>{lead.reviewsCount} avaliações ({lead.rating}★)</span>
-                    <span className="text-emerald-400 font-semibold flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
+                    <span className="text-[#635bff] font-semibold flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
                       Analisar <ArrowUpRight size={12} />
                     </span>
                   </div>
@@ -297,16 +331,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ leads, onSelectLea
 
           <button
             onClick={() => onNavigateTab('prospect')}
-            className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold rounded-xl transition-colors flex items-center justify-center gap-1.5"
+            className="w-full py-2.5 bg-[#635bff] hover:bg-[#5851db] text-white text-xs font-semibold rounded-md transition-colors shadow-xs flex items-center justify-center gap-1.5"
           >
-            <Zap size={14} className="text-amber-400" /> Buscar Mais Empresas na Região
+            <Zap size={14} /> Buscar Mais Empresas na Região
           </button>
           
           <button
             onClick={() => onNavigateTab('rank-tracker')}
-            className="w-full py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-semibold rounded-xl transition-colors flex items-center justify-center gap-1.5"
+            className="w-full py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-[#e2e8f0] text-xs font-semibold rounded-md transition-colors shadow-2xs flex items-center justify-center gap-1.5"
           >
-            <MapPin size={14} /> Abrir Rank Tracker Local
+            <MapPin size={14} className="text-[#635bff]" /> Abrir Rank Tracker Local
           </button>
         </div>
       </div>

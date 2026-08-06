@@ -138,75 +138,83 @@ export default function App() {
     );
   };
 
-  // Layout / Navigation
+  // Layout / Navigation - Stripe Light Mode Style
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
-      <header className="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40">
+    <div className="min-h-screen bg-[#f6f9fc] text-[#0a2540] flex flex-col font-sans">
+      <header className="bg-white border-b border-[#e2e8f0] sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-emerald-500 rounded-lg flex items-center justify-center text-slate-950 font-black text-lg tracking-wider shadow-md shadow-emerald-500/20">P</div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold text-sm tracking-tight text-white">PerfilPro</span>
-                <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">
-                  Agência GBP
-                </span>
-              </div>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 bg-[#635bff] rounded-lg flex items-center justify-center text-white font-black text-base shadow-sm">P</div>
+              <span className="font-bold text-sm tracking-tight text-[#0a2540]">PerfilPro</span>
+            </div>
+            
+            <div className="hidden md:flex items-center relative w-64">
+              <Search size={14} className="absolute left-3 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search..."
+                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-md pl-9 pr-3 py-1.5 text-xs text-[#0a2540] focus:outline-none focus:border-[#635bff] focus:bg-white transition-all shadow-2xs"
+                readOnly
+                value="Google Business Intelligence"
+              />
             </div>
           </div>
 
-          <nav className="hidden xl:flex items-center gap-1 bg-slate-950/60 p-1 rounded-xl border border-slate-800/80">
-            {[
-              { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-              { to: '/prospect', label: 'Lead Finder', icon: Search },
-              { to: '/leads', label: 'CRM Pipeline', icon: Kanban, badge: leads.length },
-              { to: '/proposals', label: 'Propostas WhatsApp', icon: MessageSquare },
-              { to: '/whatsapp', label: 'WhatsApp (QR)', icon: Smartphone },
-              { to: '/rank-tracker', label: 'Rank Tracker', icon: MapPin },
-              { to: '/ai-engine', label: 'Motor de IA', icon: Sparkles },
-              { to: '/reports', label: 'Relatórios', icon: FileText },
-            ].map((tab) => {
-              const IconComp = tab.icon as any;
-              return (
-                <NavLink
-                  key={tab.to}
-                  to={tab.to}
-                  className={({ isActive }) =>
-                    `px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                      isActive
-                        ? 'bg-slate-800 text-white shadow-sm border border-slate-700/50'
-                        : 'text-slate-400 hover:text-white hover:bg-slate-800/40'
-                    }`
-                  }
-                >
-                  {({ isActive }) => (
-                    <>
-                      <IconComp size={14} className={isActive ? 'text-emerald-400' : 'text-slate-400'} />
-                      <span>{tab.label}</span>
-                      {tab.badge !== undefined && (
-                        <span className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.2 rounded-full font-mono">
-                          {tab.badge}
-                        </span>
-                      )}
-                    </>
-                  )}
-                </NavLink>
-              );
-            })}
-          </nav>
-
           <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-400 hidden sm:inline font-mono">{user?.name || user?.email}</span>
-            <button onClick={logout} className="text-xs px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors border border-slate-700">
+            <button
+              onClick={() => navigate('/portal')}
+              className="py-1.5 px-3 bg-[#635bff] hover:bg-[#5851db] text-white font-medium text-xs rounded-md transition-all shadow-xs flex items-center gap-1.5"
+            >
+              Portal do Cliente
+            </button>
+            <div className="h-4 w-[1px] bg-slate-200"></div>
+            <span className="text-xs text-slate-600 font-medium hidden sm:inline">{user?.name || user?.email}</span>
+            <button onClick={logout} className="text-xs px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 rounded-md transition-colors border border-[#e2e8f0] shadow-2xs font-medium">
               Sair
             </button>
-            <NavLink
-              to="/portal"
-              className="py-1.5 px-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition-all shadow-sm shadow-emerald-500/10 flex items-center gap-1.5"
-            >
-              <Globe size={13} /> Portal
-            </NavLink>
           </div>
+        </div>
+
+        {/* Subnav Pills Stripe Style */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-1 overflow-x-auto h-12 border-t border-[#f0f4f8]">
+          {[
+            { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+            { to: '/prospect', label: 'Lead Finder', icon: Search },
+            { to: '/leads', label: 'CRM Pipeline', icon: Kanban, badge: leads.length },
+            { to: '/proposals', label: 'Propostas WhatsApp', icon: MessageSquare },
+            { to: '/whatsapp', label: 'WhatsApp (QR)', icon: Smartphone },
+            { to: '/rank-tracker', label: 'Rank Tracker', icon: MapPin },
+            { to: '/ai-engine', label: 'Motor de IA', icon: Sparkles },
+            { to: '/reports', label: 'Relatórios', icon: FileText },
+          ].map((tab) => {
+            const IconComp = tab.icon as any;
+            return (
+              <NavLink
+                key={tab.to}
+                to={tab.to}
+                className={({ isActive }) =>
+                  `px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-all whitespace-nowrap ${
+                    isActive
+                      ? 'bg-[#635bff]/10 text-[#635bff] font-semibold'
+                      : 'text-slate-600 hover:text-[#0a2540] hover:bg-slate-100/80'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <IconComp size={14} className={isActive ? 'text-[#635bff]' : 'text-slate-400'} />
+                    <span>{tab.label}</span>
+                    {tab.badge !== undefined && (
+                      <span className="text-[10px] bg-slate-200/80 text-slate-700 px-1.5 py-0.2 rounded-full font-mono">
+                        {tab.badge}
+                      </span>
+                    )}
+                  </>
+                )}
+              </NavLink>
+            );
+          })}
         </div>
       </header>
 
