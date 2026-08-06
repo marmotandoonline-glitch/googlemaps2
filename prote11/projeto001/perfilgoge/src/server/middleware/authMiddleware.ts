@@ -2,7 +2,12 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../lib/prisma';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'change-me';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+// Fail fast: refuse to start if JWT_SECRET is not configured
+if (!JWT_SECRET) {
+  throw new Error('FATAL: JWT_SECRET environment variable is not set. The server cannot start without a secure secret.');
+}
 
 export async function authMiddleware(req: Request, res: Response, next: NextFunction) {
   const auth = req.headers['authorization'];

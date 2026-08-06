@@ -14,31 +14,70 @@ import fs from 'fs';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Security headers
 app.use(helmet());
-app.use(cors());
+
+// CORS - restrict to known origins in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(cors({
+    origin: process.env.ALLOWED_ORIGINS?.split(',') || [process.env.FRONTEND_URL || ''],
+    credentials: true,
+  }));
+} else {
+  app.use(cors());
+}
+
 app.use(json({ limit: '2mb' }));
 
-// Global (lenient) rate limiter for general API
+// Strict rate limiter for authentication endpoints (prevent brute force)
+app.use('/api/auth/login', rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // 20 attempts per window
+  message: { error: 'Muitas tentativas de login. Tente novamente em 15 minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+}));
+
+app.use('/api/auth/register', rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5, // 5 registrations per hour
+  message: { error: 'Limite de registros atingido. Tente novamente mais tarde.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+}));
+
+// Strict rate limiter for Google Maps search (prevent quota abuse)
+app.use('/api/leads/search', rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 50, // 50 searches per hour per IP
+  message: { error: 'Limite de buscas atingido. Tente novamente em 1 hora.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+}));
+
+// Lenient rate limiter for general API endpoints
 app.use(
   rateLimit({
-    windowMs: 15 * 60 * 1000,
+    windowMs: 15 * 60 * 1000, // 15 minutes
     max: 200,
+    standardHeaders: true,
+    legacyHeaders: false,
   })
 );
 
-// Public routes
+// Public routes (no auth required)
 app.use('/api/auth', authRouter);
 app.use('/api/client-portal', portalRouter);
 
 // Protected routes (require JWT)
 app.use('/api/leads', authMiddleware, leadRouter);
 app.use('/api/ai', authMiddleware, aiRouter);
-// reports router would be protected similarly when added
 
+// Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 
 // Serve frontend static assets and SPA fallback in production
-const staticPath = path.resolve(process.cwd(), 'perfilpro---gestão-de-perfis-no-google', 'dist');
+const staticPath = path.resolve(process.cwd(), 'dist');
 if (fs.existsSync(staticPath)) {
   app.use(express.static(staticPath));
 
@@ -57,5 +96,6 @@ if (fs.existsSync(staticPath)) {
 }
 
 app.listen(PORT, () => {
-  console.log(`⚡ PerfilPro server listening on ${PORT}`);
+  console.log(`⚡ PerfilPro server listening on port ${PORT}`);
+  console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
 });

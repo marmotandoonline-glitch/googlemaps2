@@ -1,12 +1,11 @@
 import { PrismaClient } from '@prisma/client';
-import seedData from '../../src/data/mockLeads';
+import { INITIAL_LEADS } from '../src/data/mockLeads';
 import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('Seeding mock leads...');
-  const INITIAL_LEADS = seedData.INITIAL_LEADS || seedData;
   for (const l of INITIAL_LEADS) {
     await prisma.lead.upsert({
       where: { placeId: l.placeId || '' },
@@ -15,24 +14,24 @@ async function main() {
         id: l.id,
         name: l.name,
         category: l.category,
-        phone: l.phone,
-        website: l.website,
-        profileUrl: l.profileUrl,
+        phone: l.phone || '',
+        website: l.website || '',
+        profileUrl: l.profileUrl || '',
         placeId: l.placeId,
-        rating: l.rating,
-        reviewsCount: l.reviewsCount,
-        address: l.address,
-        neighborhood: l.neighborhood,
-        city: l.city,
-        state: l.state,
-        description: l.description,
-        photosCount: l.photosCount,
-        hasHours: l.hasHours,
-        hasServices: l.hasServices,
-        hasProducts: l.hasProducts,
-        score: l.score,
-        stage: l.stage,
-        dealValue: l.dealValue,
+        rating: l.rating || 0,
+        reviewsCount: l.reviewsCount || 0,
+        address: l.address || '',
+        neighborhood: l.neighborhood || '',
+        city: l.city || '',
+        state: l.state || '',
+        description: l.description || '',
+        photosCount: l.photosCount || 0,
+        hasHours: Boolean(l.hasHours),
+        hasServices: Boolean(l.hasServices),
+        hasProducts: Boolean(l.hasProducts),
+        score: l.score || 0,
+        stage: l.stage || 'novo',
+        dealValue: l.dealValue || 1200,
         clientPortalToken: l.clientPortalToken,
         createdAt: new Date(l.createdAt),
         updatedAt: new Date(l.updatedAt),
@@ -52,7 +51,7 @@ async function main() {
   const admin = await prisma.user.findUnique({ where: { email: adminEmail } });
   if (!admin) {
     const password = 'Password123!';
-    const hash = await bcrypt.hash(password, 10);
+    const hash = await bcrypt.hash(password, 12);
     const created = await prisma.user.create({ data: { email: adminEmail, name: 'Admin PerfilPro', passwordHash: hash, role: 'ADMIN', agencyId: agency.id } });
     console.log('Created admin user', created.email);
   } else {

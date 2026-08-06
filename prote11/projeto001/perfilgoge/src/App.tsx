@@ -28,7 +28,7 @@ import { PortalPage } from './pages/PortalPage';
 import { useAuth } from './auth/AuthProvider';
 
 export default function App() {
-  const { user, logout } = useAuth();
+  const { user, logout, apiFetch } = useAuth();
   const navigate = useNavigate();
 
   const [leads, setLeads] = React.useState<Lead[]>(INITIAL_LEADS);
@@ -37,7 +37,8 @@ export default function App() {
 
   React.useEffect(() => {
     if (!user) return;
-    fetch('/api/leads')
+    // Use authenticated fetch to load leads
+    apiFetch('/api/leads')
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
@@ -46,12 +47,12 @@ export default function App() {
         }
       })
       .catch((err) => console.log('Usando dados em memória local:', err));
-  }, [user]);
+  }, [user, apiFetch]);
 
-  // Handlers (same as before) ... kept for brevity but included
+  // Handlers
   const handleAddLeadToCrm = async (leadData: LeadSearchResult) => {
     try {
-      const res = await fetch('/api/leads', {
+      const res = await apiFetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(leadData),
@@ -63,7 +64,7 @@ export default function App() {
         setSelectedLead(createdLead);
         navigate('/leads');
       } else {
-        // fallback (omitted for brevity, kept same logic)
+        console.error('Failed to add lead:', res.status);
       }
     } catch (err) {
       console.error('Erro ao adicionar lead:', err);
@@ -74,16 +75,36 @@ export default function App() {
     setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, stage: newStage } : l)));
     if (selectedLead?.id === leadId) setSelectedLead((prev) => (prev ? { ...prev, stage: newStage } : null));
     try {
-      await fetch(`/api/leads/${leadId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ stage: newStage }) });
+      await apiFetch(`/api/leads/${leadId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stage: newStage }),
+      });
     } catch (err) {
       console.error('Erro ao atualizar estágio:', err);
     }
   };
 
   const handleAddNote = async (leadId: string, noteText: string) => {
-    setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, notes: [{ id: `note-${Date.now()}`, author: 'Déric (Agência)', text: noteText, createdAt: new Date().toISOString().slice(0, 16).replace('T', ' ') }, ...l.notes] } : l)));
+    setLeads((prev) =>
+      prev.map((l) =>
+        l.id === leadId
+          ? {
+              ...l,
+              notes: [
+                { id: `note-${Date.now()}`, author: user?.name || 'Operador', text: noteText, createdAt: new Date().toISOString().slice(0, 16).replace('T', ' ') },
+                ...l.notes,
+              ],
+            }
+          : l
+      )
+    );
     try {
-      await fetch(`/api/leads/${leadId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ newNoteText: noteText }) });
+      await apiFetch(`/api/leads/${leadId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newNoteText: noteText, noteAuthor: user?.name || 'Operador' }),
+      });
     } catch (err) {
       console.error('Erro ao adicionar nota:', err);
     }
@@ -101,7 +122,7 @@ export default function App() {
     setLeads((prev) => prev.filter((l) => l.id !== leadId));
     if (selectedLead?.id === leadId) setSelectedLead(leads.find((l) => l.id !== leadId) || null);
     try {
-      await fetch(`/api/leads/${leadId}`, { method: 'DELETE' });
+      await apiFetch(`/api/leads/${leadId}`, { method: 'DELETE' });
     } catch (err) {
       console.error('Erro ao deletar lead:', err);
     }
@@ -109,7 +130,9 @@ export default function App() {
 
   const handleClientPortalSubmit = (portalData: ClientPortalData) => {
     if (!selectedLead) return;
-    setLeads((prev) => prev.map((l) => (l.id === selectedLead.id ? { ...l, clientPortalData: portalData, stage: 'onboarding' } : l)));
+    setLeads((prev) =>
+      prev.map((l) => (l.id === selectedLead.id ? { ...l, clientPortalData: portalData, stage: 'onboarding' } : l))
+    );
   };
 
   // Layout / Navigation
@@ -122,7 +145,9 @@ export default function App() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white">PerfilPro</span>
-                <span className="text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800">Agência GBP</span>
+                <span className="text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800">
+                  Agência GBP
+                </span>
               </div>
               <p className="text-[11px] text-slate-500 font-medium hidden sm:block">Otimização de Perfis do Google Meu Negócio</p>
             </div>
@@ -139,10 +164,24 @@ export default function App() {
             ].map((tab) => {
               const IconComp = tab.icon as any;
               return (
-                <NavLink key={tab.to} to={tab.to} className={({ isActive }) => `px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors ${isActive ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
+                <NavLink
+                  key={tab.to}
+                  to={tab.to}
+                  className={({ isActive }) =>
+                    `px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors ${
+                      isActive
+                        ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300'
+                        : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800'
+                    }`
+                  }
+                >
                   <IconComp size={15} />
                   <span>{tab.label}</span>
-                  {tab.badge !== undefined && <span className="text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-1.5 py-0.2 rounded-full">{tab.badge}</span>}
+                  {tab.badge !== undefined && (
+                    <span className="text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-1.5 py-0.2 rounded-full">
+                      {tab.badge}
+                    </span>
+                  )}
                 </NavLink>
               );
             })}
@@ -150,11 +189,20 @@ export default function App() {
 
           <div className="flex items-center gap-3">
             <div className="text-xs text-slate-600 dark:text-slate-300 mr-2">{user?.name || user?.email}</div>
-            <button onClick={logout} className="text-xs px-3 py-1 bg-rose-100 text-rose-700 rounded">Logout</button>
-            <button onClick={() => setIsDarkMode((s) => !s)} className="p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Alternar Modo Escuro">
+            <button onClick={logout} className="text-xs px-3 py-1 bg-rose-100 text-rose-700 rounded">
+              Logout
+            </button>
+            <button
+              onClick={() => setIsDarkMode((s) => !s)}
+              className="p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              title="Alternar Modo Escuro"
+            >
               {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
             </button>
-            <NavLink to="/portal" className="py-1.5 px-3 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold text-xs rounded-lg transition-all shadow-sm flex items-center gap-2">
+            <NavLink
+              to="/portal"
+              className="py-1.5 px-3 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold text-xs rounded-lg transition-all shadow-sm flex items-center gap-2"
+            >
               <Globe size={14} className="text-emerald-400" /> Portal do Cliente
             </NavLink>
           </div>
@@ -167,15 +215,86 @@ export default function App() {
           <Route path="/register" element={<RegisterView onSwitchToLogin={() => navigate('/login')} />} />
 
           <Route path="/portal/:token" element={<PortalPage />} />
-          <Route path="/portal" element={<Navigate to="/portal/" replace />} />
+          <Route path="/portal" element={<PortalPage />} />
 
           <Route path="/" element={<ProtectedRoute><Navigate to="/dashboard" replace /></ProtectedRoute>} />
-          <Route path="/dashboard" element={<ProtectedRoute><DashboardView leads={leads} onSelectLead={(lead) => { setSelectedLead(lead); navigate('/leads'); }} onNavigateTab={(tab) => navigate(tab as any)} /></ProtectedRoute>} />
-          <Route path="/prospect" element={<ProtectedRoute><LeadFinderView onAddLeadToCrm={handleAddLeadToCrm} addedLeadPlaceIds={leads.map((l) => l.placeId)} /></ProtectedRoute>} />
-          <Route path="/leads" element={<ProtectedRoute><CrmPipelineView leads={leads} onUpdateLeadStage={handleUpdateLeadStage} onAddNote={handleAddNote} onSelectLeadForProposal={(lead) => { setSelectedLead(lead); navigate('/proposals'); }} onSelectLeadForAi={(lead) => { setSelectedLead(lead); navigate('/ai-engine'); }} onSelectLeadForReport={(lead) => { setSelectedLead(lead); navigate('/reports'); }} onDeleteLead={handleDeleteLead} /></ProtectedRoute>} />
-          <Route path="/proposals" element={<ProtectedRoute><ProposalsView leads={leads} selectedLead={selectedLead} onSelectLead={setSelectedLead} onUpdateProposalMsg={handleUpdateProposalMsg} /></ProtectedRoute>} />
-          <Route path="/ai-engine" element={<ProtectedRoute><AiEngineView leads={leads} selectedLead={selectedLead} onSelectLead={setSelectedLead} onSaveAiContentToLead={handleSaveAiContentToLead} /></ProtectedRoute>} />
-          <Route path="/reports" element={<ProtectedRoute><ReportsView leads={leads} selectedLead={selectedLead} onSelectLead={setSelectedLead} /></ProtectedRoute>} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardView
+                  leads={leads}
+                  onSelectLead={(lead) => { setSelectedLead(lead); navigate('/leads'); }}
+                  onNavigateTab={(tab) => navigate(tab as any)}
+                />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/prospect"
+            element={
+              <ProtectedRoute>
+                <LeadFinderView
+                  onAddLeadToCrm={handleAddLeadToCrm}
+                  addedLeadPlaceIds={leads.map((l) => l.placeId)}
+                />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leads"
+            element={
+              <ProtectedRoute>
+                <CrmPipelineView
+                  leads={leads}
+                  onUpdateLeadStage={handleUpdateLeadStage}
+                  onAddNote={handleAddNote}
+                  onSelectLeadForProposal={(lead) => { setSelectedLead(lead); navigate('/proposals'); }}
+                  onSelectLeadForAi={(lead) => { setSelectedLead(lead); navigate('/ai-engine'); }}
+                  onSelectLeadForReport={(lead) => { setSelectedLead(lead); navigate('/reports'); }}
+                  onDeleteLead={handleDeleteLead}
+                />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/proposals"
+            element={
+              <ProtectedRoute>
+                <ProposalsView
+                  leads={leads}
+                  selectedLead={selectedLead}
+                  onSelectLead={setSelectedLead}
+                  onUpdateProposalMsg={handleUpdateProposalMsg}
+                />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/ai-engine"
+            element={
+              <ProtectedRoute>
+                <AiEngineView
+                  leads={leads}
+                  selectedLead={selectedLead}
+                  onSelectLead={setSelectedLead}
+                  onSaveAiContentToLead={handleSaveAiContentToLead}
+                />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute>
+                <ReportsView
+                  leads={leads}
+                  selectedLead={selectedLead}
+                  onSelectLead={setSelectedLead}
+                />
+              </ProtectedRoute>
+            }
+          />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

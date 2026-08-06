@@ -4,12 +4,18 @@ import { createPresignedPutUrl, makeKey } from '../services/uploadService';
 import { validatePortalToken, createPortalToken } from '../services/tokenService';
 
 // POST /api/client-portal/request-upload
+// Validates token and returns presigned URLs for file upload to S3/MinIO
 export async function requestUpload(req: Request, res: Response) {
   const { token, files } = req.body || {};
-  if (!token || !Array.isArray(files)) return res.status(400).json({ error: 'token and files array required' });
+  if (!token) return res.status(400).json({ error: 'Token is required' });
 
   const tokenRec = await validatePortalToken(token);
   if (!tokenRec) return res.status(401).json({ error: 'Invalid or expired token' });
+
+  // If no files array provided, just validate the token (used for initial portal validation)
+  if (!Array.isArray(files) || files.length === 0) {
+    return res.json({ valid: true, leadId: tokenRec.leadId });
+  }
 
   const bucket = process.env.S3_BUCKET || 'perfilpro-dev';
   const presigned = [] as any[];
@@ -18,26 +24,65 @@ export async function requestUpload(req: Request, res: Response) {
     const url = await createPresignedPutUrl(bucket, key, f.type || 'application/octet-stream', 3600);
     presigned.push({ name: f.name, key, url });
   }
-  res.json({ urls: presigned });
+  res.json({ urls: presigned, leadId: tokenRec.leadId });
 }
 
 // POST /api/client-portal/complete
+// Receives portal data from the client form and updates the lead
 export async function completeUpload(req: Request, res: Response) {
   const { token, uploadedFiles, portalData } = req.body || {};
-  if (!token || !Array.isArray(uploadedFiles)) return res.status(400).json({ error: 'token and uploadedFiles array required' });
+  if (!token) return res.status(400).json({ error: 'Token is required' });
 
   const tokenRec = await validatePortalToken(token);
   if (!tokenRec) return res.status(401).json({ error: 'Invalid or expired token' });
 
-  // persist file references
-  for (const f of uploadedFiles) {
-    await prisma.file.create({ data: { leadId: tokenRec.leadId || undefined, key: f.key, url: f.url, mimeType: f.type || 'application/octet-stream' } as any });
+  // If portalData is missing or empty, return error
+  if (!portalData || typeof portalData !== 'object') {
+    return res.status(400).json({ error: 'Portal data is required' });
   }
 
-  // update lead
-  await prisma.lead.update({ where: { id: tokenRec.leadId || '' }, data: { clientPortalData: portalData as any, stage: 'onboarding' } as any });
+  const leadId = tokenRec.leadId || '';
+  if (!leadId) {
+    return res.status(400).json({ error: 'Lead not associated with this token' });
+  }
 
-  await prisma.leadHistory.create({ data: { leadId: tokenRec.leadId || '', type: 'client_upload', description: 'Client uploaded files via portal' } });
+  // Persist file references if uploadedFiles are provided
+  if (Array.isArray(uploadedFiles) && uploadedFiles.length > 0) {
+    for (const f of uploadedFiles) {
+      if (f.key && f.url) {
+        await prisma.file.create({
+          data: {
+            leadId,
+            key: f.key,
+            url: f.url,
+            mimeType: f.type || 'application/octet-stream',
+          } as any,
+        }).catch((err) => {
+          console.warn('Failed to create file record:', err);
+        });
+      }
+    }
+  }
 
-  res.json({ success: true });
+  // Update lead with portal data and move to onboarding stage
+  await prisma.lead.update({
+    where: { id: leadId },
+    data: {
+      clientPortalData: portalData as any,
+      stage: 'onboarding',
+    } as any,
+  });
+
+  // Record history
+  await prisma.leadHistory.create({
+    data: {
+      leadId,
+      type: 'client_upload',
+      description: 'Cliente enviou fotos, horários e informações através do Portal do Cliente.',
+      fromStage: 'fechado',
+      toStage: 'onboarding',
+    },
+  });
+
+  res.json({ success: true, message: 'Dados recebidos com sucesso' });
 }

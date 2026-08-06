@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 
 type User = {
   id: string;
@@ -15,6 +15,11 @@ type AuthContextValue = {
   login: (email: string, password: string) => Promise<void>;
   register: (agencyName: string, adminEmail: string, adminPassword: string, adminName?: string) => Promise<void>;
   logout: () => void;
+  /**
+   * Utility function for making authenticated API calls.
+   * Replaces the need for global fetch monkey-patching.
+   */
+  apiFetch: (url: string, options?: RequestInit) => Promise<Response>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -25,83 +30,68 @@ export function useAuth() {
   return ctx;
 }
 
+const TOKEN_KEY = 'perfilpro_token';
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [originalFetch, setOriginalFetch] = useState<any>(null);
 
+  // Bootstrap: restore token from localStorage
   useEffect(() => {
-    // bootstrap from localStorage
-    const t = localStorage.getItem('perfilpro_token');
+    const t = localStorage.getItem(TOKEN_KEY);
     if (t) setToken(t);
     else setLoading(false);
   }, []);
 
-  // install global fetch wrapper when token changes
+  // Validate token when it changes
   useEffect(() => {
-    // restore original fetch if exists
-    if ((window as any).__originalFetch && !originalFetch) setOriginalFetch((window as any).__originalFetch);
-    if (!originalFetch) {
-      (window as any).__originalFetch = (window as any).fetch;
-      setOriginalFetch((window as any).__originalFetch);
-    }
-
-    const wrap = async (input: any, init?: any) => {
-      const url = typeof input === 'string' ? input : input.url;
-      const isApi = typeof url === 'string' && (url.startsWith('/api') || url.includes(window.location.hostname + '/api'));
-
-      const headers = new Headers(init?.headers || (typeof input !== 'string' && input.headers) || {});
-      if (token && isApi) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
-
-      const newInit = { ...(init || {}), headers };
-      if (typeof input === 'string') return (window as any).__originalFetch(input, newInit);
-      return (window as any).__originalFetch(input, newInit);
-    };
-
-    (window as any).fetch = wrap;
-
-    if (token) {
-      // validate token by fetching /api/auth/me
-      (async () => {
-        try {
-          const res = await (window as any).__originalFetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } });
-          if (res.ok) {
-            const data = await res.json();
-            setUser(data);
-            localStorage.setItem('perfilpro_token', token);
-          } else {
-            // invalid token
-            setToken(null);
-            setUser(null);
-            localStorage.removeItem('perfilpro_token');
-          }
-        } catch (err) {
-          console.error('Auth /me validation failed', err);
-          setUser(null);
-          setToken(null);
-          localStorage.removeItem('perfilpro_token');
-        } finally {
-          setLoading(false);
-        }
-      })();
-    } else {
+    if (!token) {
       setLoading(false);
       setUser(null);
-      localStorage.removeItem('perfilpro_token');
+      localStorage.removeItem(TOKEN_KEY);
+      return;
     }
 
-    return () => {
-      // restore original fetch on unmount
-      if ((window as any).__originalFetch) (window as any).fetch = (window as any).__originalFetch;
-    };
+    // Validate token by fetching /api/auth/me
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data);
+          localStorage.setItem(TOKEN_KEY, token);
+        } else {
+          // Invalid token — clear state
+          setToken(null);
+          setUser(null);
+          localStorage.removeItem(TOKEN_KEY);
+        }
+      } catch (err) {
+        console.error('Auth /me validation failed', err);
+        setUser(null);
+        setToken(null);
+        localStorage.removeItem(TOKEN_KEY);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [token]);
+
+  const apiFetch = useCallback(async (url: string, options?: RequestInit): Promise<Response> => {
+    const headers = new Headers(options?.headers || {});
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+    const res = await fetch(url, { ...options, headers });
+    return res;
   }, [token]);
 
   const login = async (email: string, password: string) => {
     setLoading(true);
-    const res = await (window as any).__originalFetch('/api/auth/login', {
+    const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -114,13 +104,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const data = await res.json();
     setToken(data.token);
     setUser(data.user);
-    localStorage.setItem('perfilpro_token', data.token);
+    localStorage.setItem(TOKEN_KEY, data.token);
     setLoading(false);
   };
 
   const register = async (agencyName: string, adminEmail: string, adminPassword: string, adminName?: string) => {
     setLoading(true);
-    const res = await (window as any).__originalFetch('/api/auth/register', {
+    const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ agencyName, adminEmail, adminPassword, adminName }),
@@ -133,18 +123,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const data = await res.json();
     setToken(data.token);
     setUser(data.user);
-    localStorage.setItem('perfilpro_token', data.token);
+    localStorage.setItem(TOKEN_KEY, data.token);
     setLoading(false);
   };
 
   const logout = () => {
     setToken(null);
     setUser(null);
-    localStorage.removeItem('perfilpro_token');
+    localStorage.removeItem(TOKEN_KEY);
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, register }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout, register, apiFetch }}>
       {children}
     </AuthContext.Provider>
   );

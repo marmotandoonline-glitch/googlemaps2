@@ -60,9 +60,9 @@ export async function getPlaceDetailsWithCache(placeId: string, apiKey: string) 
   let lastErr: any = null;
   while (attempts < maxAttempts) {
     try {
-      const r = await fetch(url, { timeout: 10000 });
-      const json = await r.json();
-      const details = json.result || {};
+      const r = await fetch(url);
+      const json = await r.json() as any;
+      const details = json?.result || {};
 
       const payload = {
         name: details.name || null,

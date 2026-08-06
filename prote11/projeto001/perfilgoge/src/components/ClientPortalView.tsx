@@ -12,7 +12,7 @@ import {
   HelpCircle,
   Phone,
   Mail,
-  Instagram,
+  Camera,
   Globe,
 } from 'lucide-react';
 import { ClientPortalData, Lead } from '../types';
@@ -28,34 +28,45 @@ export const ClientPortalView: React.FC<ClientPortalViewProps> = ({
   onSubmitPortalData,
   onReturnToAdmin,
 }) => {
-  const [companyName, setCompanyName] = useState(lead?.name || 'OdontoPrime Moema');
+  const [companyName, setCompanyName] = useState(lead?.name || '');
   const [logoUrl, setLogoUrl] = useState(lead?.clientPortalData?.logoUrl || '');
   const [photoInput, setPhotoInput] = useState('');
   const [photos, setPhotos] = useState<string[]>(
-    lead?.clientPortalData?.photos || [
-      'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=800&fit=crop',
-      'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=800&fit=crop',
-    ]
+    lead?.clientPortalData?.photos || []
   );
 
-  const [contactPhone, setContactPhone] = useState(lead?.phone || '(11) 98765-4321');
-  const [contactEmail, setContactEmail] = useState(lead?.clientPortalData?.contactEmail || 'contato@empresa.com.br');
+  const [contactPhone, setContactPhone] = useState(lead?.phone || '');
+  const [contactEmail, setContactEmail] = useState(lead?.clientPortalData?.contactEmail || '');
   const [servicesInput, setServicesInput] = useState(
-    lead?.clientPortalData?.services.join(', ') || 'Limpeza de Pele, Harmonização Facial, Botox, Preenchimento'
+    lead?.clientPortalData?.services.join(', ') || ''
   );
   const [productsInput, setProductsInput] = useState(
-    lead?.clientPortalData?.products.join(', ') || 'Sérum Hidratante Home Care, Protetor Solar FPS 70'
+    lead?.clientPortalData?.products.join(', ') || ''
   );
 
   const [paymentMethods, setPaymentMethods] = useState<string[]>(
-    lead?.clientPortalData?.paymentMethods || ['PIX', 'Cartão de Crédito em até 10x', 'Dinheiro']
+    lead?.clientPortalData?.paymentMethods || []
   );
 
   const [differentialsInput, setDifferentialsInput] = useState(
-    lead?.clientPortalData?.differentials.join(', ') || 'Estacimento no local, Café gourmet espresso, Atendimento sem espera'
+    lead?.clientPortalData?.differentials.join(', ') || ''
   );
 
-  const [notes, setNotes] = useState(lead?.clientPortalData?.notes || 'Gostaríamos de enfatizar o atendimento rápido.');
+  const [notes, setNotes] = useState(lead?.clientPortalData?.notes || '');
+
+  // Social links are user-editable, not hardcoded
+  const [instagramLink, setInstagramLink] = useState(lead?.clientPortalData?.socialLinks?.instagram || '');
+  const [facebookLink, setFacebookLink] = useState('');
+  const [websiteLink, setWebsiteLink] = useState(lead?.website || '');
+
+  // Business hours are user-editable
+  const [mondayHours, setMondayHours] = useState('08:00 - 18:00');
+  const [tuesdayHours, setTuesdayHours] = useState('08:00 - 18:00');
+  const [wednesdayHours, setWednesdayHours] = useState('08:00 - 18:00');
+  const [thursdayHours, setThursdayHours] = useState('08:00 - 18:00');
+  const [fridayHours, setFridayHours] = useState('08:00 - 18:00');
+  const [saturdayHours, setSaturdayHours] = useState('08:00 - 13:00');
+  const [sundayHours, setSundayHours] = useState('Fechado');
 
   const [submitted, setSubmitted] = useState(Boolean(lead?.clientPortalData?.submittedAt));
 
@@ -72,21 +83,22 @@ export const ClientPortalView: React.FC<ClientPortalViewProps> = ({
       logoUrl,
       photos,
       businessHours: {
-        Segunda: '08:00 - 18:00',
-        Terça: '08:00 - 18:00',
-        Quarta: '08:00 - 18:00',
-        Quinta: '08:00 - 18:00',
-        Sexta: '08:00 - 18:00',
-        Sábado: '08:00 - 13:00',
-        Domingo: 'Fechado',
+        Segunda: mondayHours,
+        Terça: tuesdayHours,
+        Quarta: wednesdayHours,
+        Quinta: thursdayHours,
+        Sexta: fridayHours,
+        Sábado: saturdayHours,
+        Domingo: sundayHours,
       },
       services: servicesInput.split(',').map((s) => s.trim()).filter(Boolean),
       products: productsInput.split(',').map((p) => p.trim()).filter(Boolean),
       paymentMethods,
       differentials: differentialsInput.split(',').map((d) => d.trim()).filter(Boolean),
       socialLinks: {
-        instagram: 'https://instagram.com/empresa',
-        website: lead?.website || 'https://empresa.com.br',
+        instagram: instagramLink || undefined,
+        facebook: facebookLink || undefined,
+        website: websiteLink || undefined,
       },
       contactEmail,
       contactPhone,
@@ -98,6 +110,12 @@ export const ClientPortalView: React.FC<ClientPortalViewProps> = ({
       onSubmitPortalData(portalData);
     }
     setSubmitted(true);
+  };
+
+  const togglePaymentMethod = (method: string) => {
+    setPaymentMethods((prev) =>
+      prev.includes(method) ? prev.filter((m) => m !== method) : [...prev, method]
+    );
   };
 
   return (
@@ -184,7 +202,7 @@ export const ClientPortalView: React.FC<ClientPortalViewProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Nome da Empresa / Marca
+                  Nome da Empresa / Marca *
                 </label>
                 <input
                   type="text"
@@ -197,7 +215,7 @@ export const ClientPortalView: React.FC<ClientPortalViewProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Telefone de Contato (WhatsApp)
+                  Telefone de Contato (WhatsApp) *
                 </label>
                 <input
                   type="text"
@@ -210,7 +228,7 @@ export const ClientPortalView: React.FC<ClientPortalViewProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  E-mail Oficial
+                  E-mail Oficial *
                 </label>
                 <input
                   type="email"
@@ -232,6 +250,34 @@ export const ClientPortalView: React.FC<ClientPortalViewProps> = ({
                   placeholder="https://suaempresa.com.br/logo.png"
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 />
+              </div>
+            </div>
+
+            {/* Business Hours */}
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
+              <h4 className="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Clock size={16} /> Horários de Funcionamento
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {[
+                  { label: 'Segunda-feira', value: mondayHours, setter: setMondayHours },
+                  { label: 'Terça-feira', value: tuesdayHours, setter: setTuesdayHours },
+                  { label: 'Quarta-feira', value: wednesdayHours, setter: setWednesdayHours },
+                  { label: 'Quinta-feira', value: thursdayHours, setter: setThursdayHours },
+                  { label: 'Sexta-feira', value: fridayHours, setter: setFridayHours },
+                  { label: 'Sábado', value: saturdayHours, setter: setSaturdayHours },
+                  { label: 'Domingo', value: sundayHours, setter: setSundayHours },
+                ].map(({ label, value, setter }) => (
+                  <div key={label} className="flex items-center gap-2">
+                    <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 w-24">{label}:</span>
+                    <input
+                      type="text"
+                      value={value}
+                      onChange={(e) => setter(e.target.value)}
+                      className="flex-1 px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-xs"
+                    />
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -264,7 +310,7 @@ export const ClientPortalView: React.FC<ClientPortalViewProps> = ({
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
                 {photos.map((url, idx) => (
                   <div key={idx} className="relative group rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 aspect-video">
-                    <img src={url} alt={`Foto ${idx}`} className="w-full h-full object-cover" />
+                    <img src={url} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
                     <button
                       type="button"
                       onClick={() => setPhotos(photos.filter((_, i) => i !== idx))}
@@ -287,6 +333,7 @@ export const ClientPortalView: React.FC<ClientPortalViewProps> = ({
                   value={servicesInput}
                   onChange={(e) => setServicesInput(e.target.value)}
                   rows={3}
+                  placeholder="Ex: Consulta, Limpeza, Clareamento"
                   className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 />
               </div>
@@ -299,7 +346,59 @@ export const ClientPortalView: React.FC<ClientPortalViewProps> = ({
                   value={productsInput}
                   onChange={(e) => setProductsInput(e.target.value)}
                   rows={3}
+                  placeholder="Ex: Kit Manutenção, Presente Especial"
                   className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Payment Methods */}
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+              <h4 className="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <DollarSign size={16} /> Formas de Pagamento
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {['PIX', 'Cartão de Crédito', 'Cartão de Débito', 'Dinheiro', 'Boleto'].map((method) => (
+                  <button
+                    key={method}
+                    type="button"
+                    onClick={() => togglePaymentMethod(method)}
+                    className={`px-3 py-1.5 text-[11px] font-bold rounded-lg transition-colors ${
+                      paymentMethods.includes(method)
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950'
+                    }`}
+                  >
+                    {method}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Social Links */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Instagram (URL)
+                </label>
+                <input
+                  type="url"
+                  value={instagramLink}
+                  onChange={(e) => setInstagramLink(e.target.value)}
+                  placeholder="https://instagram.com/suaempresa"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Facebook (URL)
+                </label>
+                <input
+                  type="url"
+                  value={facebookLink}
+                  onChange={(e) => setFacebookLink(e.target.value)}
+                  placeholder="https://facebook.com/suaempresa"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs"
                 />
               </div>
             </div>
@@ -307,12 +406,13 @@ export const ClientPortalView: React.FC<ClientPortalViewProps> = ({
             {/* Differentials & Notes */}
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Diferenciais da Empresa (Estacimento, Acessibilidade, Café, etc.)
+                Diferenciais da Empresa (Estacionamento, Acessibilidade, Café, etc.)
               </label>
               <input
                 type="text"
                 value={differentialsInput}
                 onChange={(e) => setDifferentialsInput(e.target.value)}
+                placeholder="Ex: Estacionamento no local, Café gourmet, Atendimento sem espera"
                 className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
@@ -325,6 +425,7 @@ export const ClientPortalView: React.FC<ClientPortalViewProps> = ({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}
+                placeholder="Informe qualquer informação adicional que possa nos ajudar na otimização do seu perfil."
                 className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
