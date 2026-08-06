@@ -8,9 +8,18 @@ import {
   MessageSquare,
   Sparkles,
   FileText,
-  Moon,
-  Sun,
   Globe,
+  Smartphone,
+  MapPin,
+  CreditCard,
+  DollarSign,
+  ArrowUpRight,
+  Shield,
+  Bell,
+  ChevronDown,
+  HelpCircle,
+  Settings,
+  Plus,
 } from 'lucide-react';
 import { INITIAL_LEADS } from './data/mockLeads';
 import { Lead, LeadSearchResult, PipelineStage, AIContentResult, ClientPortalData } from './types';
@@ -27,7 +36,6 @@ import { ProtectedRoute } from './router/ProtectedRoute';
 import { PortalPage } from './pages/PortalPage';
 import { WhatsAppView } from './components/WhatsAppView';
 import { RankTrackerView } from './components/RankTrackerView';
-import { Smartphone, MapPin } from 'lucide-react';
 import { useAuth } from './auth/AuthProvider';
 
 export default function App() {
@@ -36,11 +44,9 @@ export default function App() {
 
   const [leads, setLeads] = React.useState<Lead[]>(INITIAL_LEADS);
   const [selectedLead, setSelectedLead] = React.useState<Lead | null>(INITIAL_LEADS[0] || null);
-  const [isDarkMode, setIsDarkMode] = React.useState(false);
 
   React.useEffect(() => {
     if (!user) return;
-    // Use authenticated fetch to load leads
     apiFetch('/api/leads')
       .then((res) => res.json())
       .then((data) => {
@@ -66,8 +72,6 @@ export default function App() {
         setLeads((prev) => [createdLead, ...prev]);
         setSelectedLead(createdLead);
         navigate('/leads');
-      } else {
-        console.error('Failed to add lead:', res.status);
       }
     } catch (err) {
       console.error('Erro ao adicionar lead:', err);
@@ -138,196 +142,279 @@ export default function App() {
     );
   };
 
-  // Layout / Navigation - Mercury Bank Design System
+  // Se estiver na tela de login/registro ou portal público, renderiza sem a sidebar do Mercury
   return (
-    <div className="min-h-screen bg-[#ECEDF7] text-[#16162B] flex flex-col font-sans">
-      <header className="bg-white border-b border-[#E7E7F1] sticky top-0 z-40 shadow-2xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-[#5B4FE9] rounded-xl flex items-center justify-center text-white font-black text-base shadow-xs">P</div>
-              <span className="font-bold text-sm tracking-tight text-[#16162B]">PerfilPro</span>
-            </div>
-            
-            <div className="hidden md:flex items-center relative w-72">
-              <Search size={14} className="absolute left-3.5 text-[#8A8AA3]" />
-              <input
-                type="text"
-                placeholder="Buscar ou ir para..."
-                className="w-full bg-[#ECEDF7]/50 border border-[#E2E2EE] rounded-full pl-9 pr-4 py-1.5 text-xs text-[#16162B] focus:outline-none focus:border-[#5B4FE9] focus:bg-white transition-all shadow-2xs"
-                readOnly
-                value="Google Business Intelligence (⌘K)"
-              />
-            </div>
-          </div>
+    <Routes>
+      <Route path="/login" element={<LoginView onSwitchToRegister={() => navigate('/register')} />} />
+      <Route path="/register" element={<RegisterView onSwitchToLogin={() => navigate('/login')} />} />
+      <Route path="/portal/:token" element={<PortalPage />} />
+      <Route path="/portal" element={<PortalPage />} />
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/portal')}
-              className="py-1.5 px-4 bg-[#5B4FE9] hover:bg-[#4C3FDB] text-white font-medium text-xs rounded-full transition-all shadow-xs flex items-center gap-1.5"
-            >
-              Portal do Cliente
-            </button>
-            <div className="h-4 w-[1px] bg-[#E7E7F1]"></div>
-            <span className="text-xs text-[#8A8AA3] font-medium hidden sm:inline">{user?.name || user?.email}</span>
-            <button onClick={logout} className="text-xs px-3 py-1.5 bg-white hover:bg-[#ECEDF7]/40 text-[#16162B] rounded-full transition-colors border border-[#E2E2EE] shadow-2xs font-medium">
-              Sair
-            </button>
-          </div>
-        </div>
+      <Route
+        path="*"
+        element={
+          <ProtectedRoute>
+            <div className="min-h-screen bg-[#ECEDF7] text-[#16162B] flex font-sans">
+              {/* Sidebar Lateral Esquerda (Estilo Mercury Exato) */}
+              <aside className="w-64 bg-white border-r border-[#E7E7F1] flex flex-col shrink-0 hidden lg:flex sticky top-0 h-screen select-none">
+                {/* Top Company Selector */}
+                <div className="p-4 border-b border-[#E7E7F1] flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 bg-[#16162B] text-white rounded-md flex items-center justify-center font-bold text-xs">
+                      P
+                    </div>
+                    <div>
+                      <div className="text-xs font-semibold text-[#16162B] flex items-center gap-1">
+                        PerfilPro Agency <ChevronDown size={12} className="text-[#8A8AA3]" />
+                      </div>
+                      <div className="text-[10px] text-[#8A8AA3]">Workspace Principal</div>
+                    </div>
+                  </div>
+                </div>
 
-        {/* Subnav Pills Mercury Style */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-1.5 overflow-x-auto h-12 border-t border-[#E7E7F1] bg-white">
-          {[
-            { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-            { to: '/prospect', label: 'Lead Finder', icon: Search },
-            { to: '/leads', label: 'CRM Pipeline', icon: Kanban, badge: leads.length },
-            { to: '/proposals', label: 'Propostas WhatsApp', icon: MessageSquare },
-            { to: '/whatsapp', label: 'WhatsApp (QR)', icon: Smartphone },
-            { to: '/rank-tracker', label: 'Rank Tracker', icon: MapPin },
-            { to: '/ai-engine', label: 'Motor de IA', icon: Sparkles },
-            { to: '/reports', label: 'Relatórios', icon: FileText },
-          ].map((tab) => {
-            const IconComp = tab.icon as any;
-            return (
-              <NavLink
-                key={tab.to}
-                to={tab.to}
-                className={({ isActive }) =>
-                  `px-3.5 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 transition-all whitespace-nowrap ${
-                    isActive
-                      ? 'bg-[#F1F0FC] text-[#5B4FE9] font-semibold'
-                      : 'text-[#8A8AA3] hover:text-[#16162B] hover:bg-[#ECEDF7]/50'
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <IconComp size={14} className={isActive ? 'text-[#5B4FE9]' : 'text-[#8A8AA3]'} />
-                    <span>{tab.label}</span>
-                    {tab.badge !== undefined && (
-                      <span className="text-[10px] bg-[#ECEDF7] text-[#16162B] px-1.5 py-0.2 rounded-full font-mono">
-                        {tab.badge}
+                {/* Navigation Items */}
+                <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6 text-xs font-medium">
+                  {/* Main Group */}
+                  <div className="space-y-1">
+                    {[
+                      { to: '/dashboard', label: 'Home', icon: LayoutDashboard },
+                      { to: '/prospect', label: 'Lead Finder', icon: Search },
+                      { to: '/leads', label: 'CRM Pipeline', icon: Kanban, badge: leads.length },
+                      { to: '/proposals', label: 'Propostas WhatsApp', icon: MessageSquare },
+                      { to: '/whatsapp', label: 'WhatsApp (QR)', icon: Smartphone },
+                    ].map((item) => {
+                      const IconComp = item.icon;
+                      return (
+                        <NavLink
+                          key={item.to}
+                          to={item.to}
+                          className={({ isActive }) =>
+                            `flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${
+                              isActive
+                                ? 'bg-[#F1F0FC] text-[#5B4FE9] font-semibold'
+                                : 'text-[#16162B] hover:bg-[#ECEDF7]/50 text-[#8A8AA3] hover:text-[#16162B]'
+                            }`
+                          }
+                        >
+                          {({ isActive }) => (
+                            <>
+                              <div className="flex items-center gap-2.5">
+                                <IconComp size={16} className={isActive ? 'text-[#5B4FE9]' : 'text-[#8A8AA3]'} />
+                                <span>{item.label}</span>
+                              </div>
+                              {item.badge !== undefined && (
+                                <span className="text-[10px] bg-[#ECEDF7] text-[#16162B] px-1.5 py-0.2 rounded-full font-mono">
+                                  {item.badge}
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </NavLink>
+                      );
+                    })}
+                  </div>
+
+                  {/* Workflows Group */}
+                  <div className="space-y-1.5 pt-2">
+                    <div className="px-3 text-[10px] font-semibold tracking-wider text-[#B4B4C6] uppercase">
+                      Workflows & IA
+                    </div>
+                    {[
+                      { to: '/rank-tracker', label: 'Rank Tracker', icon: MapPin },
+                      { to: '/ai-engine', label: 'Motor de IA', icon: Sparkles },
+                      { to: '/reports', label: 'Relatórios', icon: FileText },
+                    ].map((item) => {
+                      const IconComp = item.icon;
+                      return (
+                        <NavLink
+                          key={item.to}
+                          to={item.to}
+                          className={({ isActive }) =>
+                            `flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors ${
+                              isActive
+                                ? 'bg-[#F1F0FC] text-[#5B4FE9] font-semibold'
+                                : 'text-[#8A8AA3] hover:text-[#16162B] hover:bg-[#ECEDF7]/50'
+                            }`
+                          }
+                        >
+                          {({ isActive }) => (
+                            <>
+                              <IconComp size={16} className={isActive ? 'text-[#5B4FE9]' : 'text-[#8A8AA3]'} />
+                              <span>{item.label}</span>
+                            </>
+                          )}
+                        </NavLink>
+                      );
+                    })}
+                  </div>
+
+                  {/* Secondary Operations */}
+                  <div className="space-y-1.5 pt-2">
+                    <div className="px-3 text-[10px] font-semibold tracking-wider text-[#B4B4C6] uppercase">
+                      Gestão
+                    </div>
+                    <NavLink
+                      to="/portal"
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[#8A8AA3] hover:text-[#16162B] hover:bg-[#ECEDF7]/50 transition-colors"
+                    >
+                      <Globe size={16} className="text-[#8A8AA3]" />
+                      <span>Portal do Cliente</span>
+                    </NavLink>
+                  </div>
+                </div>
+
+                {/* Sidebar Footer User */}
+                <div className="p-3 border-t border-[#E7E7F1] flex items-center justify-between bg-white">
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <div className="w-7 h-7 rounded-full bg-[#5B4FE9]/10 text-[#5B4FE9] font-bold text-xs flex items-center justify-center shrink-0">
+                      {user?.name?.[0] || 'U'}
+                    </div>
+                    <div className="truncate">
+                      <div className="text-xs font-medium text-[#16162B] truncate">{user?.name || 'Operador'}</div>
+                      <div className="text-[10px] text-[#8A8AA3] truncate">{user?.email || 'admin@perfilpro.com'}</div>
+                    </div>
+                  </div>
+                  <button onClick={logout} className="text-xs text-[#8A8AA3] hover:text-[#16162B] p-1.5 rounded hover:bg-[#ECEDF7]/50" title="Sair">
+                    Sair
+                  </button>
+                </div>
+              </aside>
+
+              {/* Conteúdo Principal */}
+              <div className="flex-1 flex flex-col min-w-0">
+                {/* Topbar Exata Mercury */}
+                <header className="bg-white border-b border-[#E7E7F1] h-16 flex items-center justify-between px-6 sticky top-0 z-30 shadow-2xs">
+                  <div className="flex items-center gap-4 flex-1">
+                    {/* Search or jump to */}
+                    <div className="relative max-w-md w-full">
+                      <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8A8AA3]" />
+                      <input
+                        type="text"
+                        placeholder="Search or jump to"
+                        className="w-full bg-[#ECEDF7]/40 border border-[#E2E2EE] rounded-full pl-9 pr-12 py-1.5 text-xs text-[#16162B] focus:outline-none focus:border-[#5B4FE9] focus:bg-white transition-all shadow-2xs"
+                        readOnly
+                        value="Search or jump to"
+                      />
+                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-mono bg-[#E2E2EE]/60 text-[#8A8AA3] px-1.5 py-0.5 rounded">
+                        ⌘K
                       </span>
-                    )}
-                  </>
-                )}
-              </NavLink>
-            );
-          })}
-        </div>
-      </header>
+                    </div>
+                  </div>
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
-        <Routes>
-          <Route path="/login" element={<LoginView onSwitchToRegister={() => navigate('/register')} />} />
-          <Route path="/register" element={<RegisterView onSwitchToLogin={() => navigate('/login')} />} />
+                  {/* Topbar Right Actions */}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => navigate('/prospect')}
+                      className="px-4 py-1.5 bg-white border border-[#E2E2EE] hover:bg-[#ECEDF7]/40 text-[#16162B] rounded-full text-xs font-medium transition-all shadow-2xs flex items-center gap-1.5"
+                    >
+                      <span>Move Money</span>
+                      <ChevronDown size={12} className="text-[#8A8AA3]" />
+                    </button>
 
-          <Route path="/portal/:token" element={<PortalPage />} />
-          <Route path="/portal" element={<PortalPage />} />
+                    <button className="p-2 text-[#8A8AA3] hover:text-[#16162B] rounded-full hover:bg-[#ECEDF7]/50 transition-colors relative">
+                      <HelpCircle size={18} />
+                    </button>
 
-          <Route path="/" element={<ProtectedRoute><Navigate to="/dashboard" replace /></ProtectedRoute>} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <DashboardView
-                  leads={leads}
-                  onSelectLead={(lead) => { setSelectedLead(lead); navigate('/leads'); }}
-                  onNavigateTab={(tab) => navigate(tab as any)}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/prospect"
-            element={
-              <ProtectedRoute>
-                <LeadFinderView
-                  onAddLeadToCrm={handleAddLeadToCrm}
-                  addedLeadPlaceIds={leads.map((l) => l.placeId)}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/leads"
-            element={
-              <ProtectedRoute>
-                <CrmPipelineView
-                  leads={leads}
-                  onUpdateLeadStage={handleUpdateLeadStage}
-                  onAddNote={handleAddNote}
-                  onSelectLeadForProposal={(lead) => { setSelectedLead(lead); navigate('/proposals'); }}
-                  onSelectLeadForAi={(lead) => { setSelectedLead(lead); navigate('/ai-engine'); }}
-                  onSelectLeadForReport={(lead) => { setSelectedLead(lead); navigate('/reports'); }}
-                  onDeleteLead={handleDeleteLead}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/proposals"
-            element={
-              <ProtectedRoute>
-                <ProposalsView
-                  leads={leads}
-                  selectedLead={selectedLead}
-                  onSelectLead={setSelectedLead}
-                  onUpdateProposalMsg={handleUpdateProposalMsg}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/whatsapp"
-            element={
-              <ProtectedRoute>
-                <WhatsAppView />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/rank-tracker"
-            element={
-              <ProtectedRoute>
-                <RankTrackerView
-                  leads={leads}
-                  selectedLead={selectedLead}
-                  onSelectLead={setSelectedLead}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/ai-engine"
-            element={
-              <ProtectedRoute>
-                <AiEngineView
-                  leads={leads}
-                  selectedLead={selectedLead}
-                  onSelectLead={setSelectedLead}
-                  onSaveAiContentToLead={handleSaveAiContentToLead}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/reports"
-            element={
-              <ProtectedRoute>
-                <ReportsView
-                  leads={leads}
-                  selectedLead={selectedLead}
-                  onSelectLead={setSelectedLead}
-                />
-              </ProtectedRoute>
-            }
-          />
+                    <button className="p-2 text-[#8A8AA3] hover:text-[#16162B] rounded-full hover:bg-[#ECEDF7]/50 transition-colors relative">
+                      <Bell size={18} />
+                      <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#5B4FE9] rounded-full"></span>
+                    </button>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </main>
-    </div>
+                    <div className="w-8 h-8 rounded-full bg-[#5B4FE9] text-white flex items-center justify-center font-bold text-xs shadow-xs cursor-pointer">
+                      {user?.name?.[0] || 'P'}
+                    </div>
+                  </div>
+                </header>
+
+                <main className="flex-1 p-6 sm:p-8 max-w-7xl w-full mx-auto">
+                  <Routes>
+                    <Route
+                      path="/dashboard"
+                      element={
+                        <DashboardView
+                          leads={leads}
+                          onSelectLead={(lead) => { setSelectedLead(lead); navigate('/leads'); }}
+                          onNavigateTab={(tab) => navigate(tab as any)}
+                        />
+                      }
+                    />
+                    <Route
+                      path="/prospect"
+                      element={
+                        <LeadFinderView
+                          onAddLeadToCrm={handleAddLeadToCrm}
+                          addedLeadPlaceIds={leads.map((l) => l.placeId)}
+                        />
+                      }
+                    />
+                    <Route
+                      path="/leads"
+                      element={
+                        <CrmPipelineView
+                          leads={leads}
+                          onUpdateLeadStage={handleUpdateLeadStage}
+                          onAddNote={handleAddNote}
+                          onSelectLeadForProposal={(lead) => { setSelectedLead(lead); navigate('/proposals'); }}
+                          onSelectLeadForAi={(lead) => { setSelectedLead(lead); navigate('/ai-engine'); }}
+                          onSelectLeadForReport={(lead) => { setSelectedLead(lead); navigate('/reports'); }}
+                          onDeleteLead={handleDeleteLead}
+                        />
+                      }
+                    />
+                    <Route
+                      path="/proposals"
+                      element={
+                        <ProposalsView
+                          leads={leads}
+                          selectedLead={selectedLead}
+                          onSelectLead={setSelectedLead}
+                          onUpdateProposalMsg={handleUpdateProposalMsg}
+                        />
+                      }
+                    />
+                    <Route
+                      path="/whatsapp"
+                      element={<WhatsAppView />}
+                    />
+                    <Route
+                      path="/rank-tracker"
+                      element={
+                        <RankTrackerView
+                          leads={leads}
+                          selectedLead={selectedLead}
+                          onSelectLead={setSelectedLead}
+                        />
+                      }
+                    />
+                    <Route
+                      path="/ai-engine"
+                      element={
+                        <AiEngineView
+                          leads={leads}
+                          selectedLead={selectedLead}
+                          onSelectLead={setSelectedLead}
+                          onSaveAiContentToLead={handleSaveAiContentToLead}
+                        />
+                      }
+                    />
+                    <Route
+                      path="/reports"
+                      element={
+                        <ReportsView
+                          leads={leads}
+                          selectedLead={selectedLead}
+                          onSelectLead={setSelectedLead}
+                        />
+                      }
+                    />
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                  </Routes>
+                </main>
+              </div>
+            </div>
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
   );
 }
