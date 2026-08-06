@@ -23,7 +23,6 @@ interface DashboardViewProps {
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({ leads, onSelectLead, onNavigateTab }) => {
-  // Metrics Calculations
   const totalLeads = leads.length;
 
   const leadsInNegotiation = leads.filter((l) =>
@@ -54,7 +53,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ leads, onSelectLea
     .sort((a, b) => a.score - b.score)
     .slice(0, 4);
 
-  // Stage distribution
   const stageCounts: Record<PipelineStage, number> = {
     novo: 0,
     analisado: 0,
@@ -89,33 +87,33 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ leads, onSelectLea
 
   return (
     <div className="space-y-6">
-      {/* Top Welcome Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden border border-slate-800">
-        <div className="absolute right-0 top-0 opacity-10 translate-x-12 -translate-y-6">
-          <Building2 size={300} />
+      {/* Top Welcome Banner - Vercel / Linear Style */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 relative overflow-hidden shadow-2xl">
+        <div className="absolute right-0 top-0 opacity-5 translate-x-10 -translate-y-10 text-emerald-400 pointer-events-none">
+          <Building2 size={320} />
         </div>
-        <div className="relative z-10 max-w-3xl space-y-3">
-          <div className="inline-flex items-center gap-2 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider">
-            <ShieldCheck size={14} /> Painel Operacional da Agência
+        <div className="relative z-10 max-w-2xl space-y-3">
+          <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-xs font-mono tracking-wide">
+            <ShieldCheck size={14} /> PAINEL OPERACIONAL DA AGÊNCIA
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            Gestão de Otimizações do Perfil da Empresa no Google
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+            Gestão de Otimização e Prospecção GBP
           </h1>
-          <p className="text-slate-300 text-sm leading-relaxed">
-            Acompanhe a prospecção de leads, cálculo de score de oportunidade, pipeline de vendas e produção automatizada com IA.
+          <p className="text-slate-400 text-sm leading-relaxed font-sans">
+            Monitore o pipeline de vendas, audite perfis locais com IA e automatize propostas comerciais de alto impacto.
           </p>
           <div className="pt-2 flex flex-wrap gap-3">
             <button
-              onClick={() => onNavigateTab('finder')}
-              className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-lg text-sm transition-all shadow-md hover:shadow-indigo-500/20"
+              onClick={() => onNavigateTab('prospect')}
+              className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-lg shadow-emerald-500/10"
             >
-              <Search size={16} /> Prospectar Novos Leads
+              <Search size={14} /> Prospectar Novos Leads
             </button>
             <button
-              onClick={() => onNavigateTab('crm')}
-              className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium px-4 py-2 rounded-lg text-sm transition-all"
+              onClick={() => onNavigateTab('leads')}
+              className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold px-4 py-2 rounded-xl text-xs transition-all"
             >
-              <Users size={16} /> Ver Pipeline CRM ({totalLeads})
+              <Users size={14} /> Ver Pipeline CRM ({totalLeads})
             </button>
           </div>
         </div>
@@ -124,92 +122,92 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ leads, onSelectLea
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Metric 1 */}
-        <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Total de Leads</span>
-            <div className="p-2 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-lg">
-              <Users size={18} />
+        <div className="bg-slate-900 border border-slate-800/80 p-5 rounded-xl shadow-sm space-y-3">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-xs font-semibold uppercase tracking-wider font-mono">Total de Leads</span>
+            <div className="p-2 bg-slate-800 text-slate-300 rounded-lg">
+              <Users size={16} />
             </div>
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-bold text-slate-900 dark:text-white">{totalLeads}</span>
-            <span className="text-xs text-emerald-600 font-medium flex items-center gap-0.5">
+            <span className="text-2xl font-black text-white">{totalLeads}</span>
+            <span className="text-xs text-emerald-400 font-mono flex items-center gap-0.5">
               <TrendingUp size={12} /> Ativos
             </span>
           </div>
-          <p className="text-xs text-slate-500">{leadsInNegotiation} em negociação ativa</p>
+          <p className="text-xs text-slate-400">{leadsInNegotiation} em negociação ativa</p>
         </div>
 
         {/* Metric 2 */}
-        <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Receita em Carteira</span>
-            <div className="p-2 bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded-lg">
-              <DollarSign size={18} />
+        <div className="bg-slate-900 border border-slate-800/80 p-5 rounded-xl shadow-sm space-y-3">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-xs font-semibold uppercase tracking-wider font-mono">Receita em Carteira</span>
+            <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg">
+              <DollarSign size={16} />
             </div>
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-bold text-slate-900 dark:text-white">
+            <span className="text-2xl font-black text-white">
               R$ {totalRevenue.toLocaleString('pt-BR')}
             </span>
-            <span className="text-xs text-emerald-600 font-medium">Contratos</span>
+            <span className="text-xs text-emerald-400 font-mono">Contratos</span>
           </div>
-          <p className="text-xs text-slate-500">MRR Mensalistas: R$ {mrr.toLocaleString('pt-BR')}/mês</p>
+          <p className="text-xs text-slate-400">MRR Mensalistas: R$ {mrr.toLocaleString('pt-BR')}/mês</p>
         </div>
 
         {/* Metric 3 */}
-        <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Score Médio Oportunidades</span>
-            <div className="p-2 bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 rounded-lg">
-              <Star size={18} />
+        <div className="bg-slate-900 border border-slate-800/80 p-5 rounded-xl shadow-sm space-y-3">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-xs font-semibold uppercase tracking-wider font-mono">Score Médio Oportunidades</span>
+            <div className="p-2 bg-amber-500/10 text-amber-400 rounded-lg">
+              <Star size={16} />
             </div>
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-bold text-slate-900 dark:text-white">{avgScore} / 100</span>
+            <span className="text-2xl font-black text-white">{avgScore} / 100</span>
             <span
-              className={`text-xs font-medium px-2 py-0.5 rounded ${
+              className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
                 avgScore < 50
-                  ? 'bg-rose-100 text-rose-700'
+                  ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
                   : avgScore < 75
-                  ? 'bg-amber-100 text-amber-700'
-                  : 'bg-emerald-100 text-emerald-700'
+                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
               }`}
             >
-              {avgScore < 50 ? 'Alto Potencial' : 'Otimização Moderada'}
+              {avgScore < 50 ? 'Alto Potencial' : 'Moderado'}
             </span>
           </div>
-          <p className="text-xs text-slate-500">Quanto menor o score, maior a dor do cliente</p>
+          <p className="text-xs text-slate-400">Menor score = maior dor do cliente</p>
         </div>
 
         {/* Metric 4 */}
-        <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Operação & Mensalistas</span>
-            <div className="p-2 bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 rounded-lg">
-              <CheckCircle2 size={18} />
+        <div className="bg-slate-900 border border-slate-800/80 p-5 rounded-xl shadow-sm space-y-3">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-xs font-semibold uppercase tracking-wider font-mono">Operação & Mensalistas</span>
+            <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg">
+              <CheckCircle2 size={16} />
             </div>
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-bold text-slate-900 dark:text-white">{monthlyClients} Clientes</span>
-            <span className="text-xs text-blue-600 font-medium">{leadsInProduction} em produção</span>
+            <span className="text-2xl font-black text-white">{monthlyClients} Clientes</span>
+            <span className="text-xs text-blue-400 font-mono">{leadsInProduction} em produção</span>
           </div>
-          <p className="text-xs text-slate-500">Recorrência garantida com relatórios e posts</p>
+          <p className="text-xs text-slate-400">Recorrência garantida com relatórios</p>
         </div>
       </div>
 
-      {/* Main Grid: Pipeline Breakdown & Urgent Leads */}
+      {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Funnel Distribution */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        {/* Left: Funnel Distribution */}
+        <div className="lg:col-span-2 bg-slate-900 border border-slate-800/80 p-6 rounded-xl shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-bold text-slate-900 dark:text-white text-base">Distribuição do Funil de Vendas</h3>
-              <p className="text-xs text-slate-500">Status atual das empresas registradas no CRM</p>
+              <h3 className="font-bold text-white text-sm">Distribuição do Funil de Vendas</h3>
+              <p className="text-xs text-slate-400">Status atual das empresas registradas no CRM</p>
             </div>
             <button
-              onClick={() => onNavigateTab('crm')}
-              className="text-xs text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 font-semibold flex items-center gap-1"
+              onClick={() => onNavigateTab('leads')}
+              className="text-xs text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1"
             >
               Ver Kanban <ChevronRight size={14} />
             </button>
@@ -223,21 +221,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ leads, onSelectLea
               return (
                 <div key={stage} className="space-y-1 text-xs">
                   <div className="flex justify-between font-medium">
-                    <span className="text-slate-700 dark:text-slate-300">{stageLabels[stage]}</span>
-                    <span className="text-slate-500 font-semibold">
+                    <span className="text-slate-300">{stageLabels[stage]}</span>
+                    <span className="text-slate-400 font-mono">
                       {count} ({percentage}%)
                     </span>
                   </div>
-                  <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                  <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
                     <div
                       className={`h-full rounded-full transition-all duration-500 ${
                         ['novo', 'analisado'].includes(stage)
-                          ? 'bg-slate-400'
+                          ? 'bg-slate-600'
                           : ['contato_enviado', 'respondeu', 'negociacao'].includes(stage)
                           ? 'bg-amber-500'
                           : ['fechado', 'onboarding', 'producao'].includes(stage)
-                          ? 'bg-indigo-600'
-                          : 'bg-emerald-500'
+                          ? 'bg-emerald-500'
+                          : 'bg-blue-500'
                       }`}
                       style={{ width: `${percentage}%` }}
                     />
@@ -248,48 +246,48 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ leads, onSelectLea
           </div>
         </div>
 
-        {/* Right Column: High Opportunity Targets (Urgent Leads) */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        {/* Right: Urgent Leads / Opportunities */}
+        <div className="bg-slate-900 border border-slate-800/80 p-6 rounded-xl shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-rose-100 text-rose-600 rounded">
-                <AlertTriangle size={16} />
+              <div className="p-1.5 bg-rose-500/10 text-rose-400 rounded-lg border border-rose-500/20">
+                <AlertTriangle size={15} />
               </div>
               <div>
-                <h3 className="font-bold text-slate-900 dark:text-white text-sm">Maiores Oportunidades</h3>
-                <p className="text-xs text-slate-500">Perfis com falhas críticas (Score &lt; 50)</p>
+                <h3 className="font-bold text-white text-sm">Maiores Oportunidades</h3>
+                <p className="text-xs text-slate-400">Score de alerta (&lt; 50)</p>
               </div>
             </div>
           </div>
 
           <div className="space-y-3">
             {highOpportunityLeads.length === 0 ? (
-              <p className="text-xs text-slate-400 italic py-4 text-center">Nenhum lead com falha crítica no momento.</p>
+              <p className="text-xs text-slate-500 italic py-4 text-center">Nenhum lead com falha crítica no momento.</p>
             ) : (
               highOpportunityLeads.map((lead) => (
                 <div
                   key={lead.id}
                   onClick={() => onSelectLead(lead)}
-                  className="p-3 bg-slate-50 hover:bg-indigo-50/60 dark:bg-slate-800/60 dark:hover:bg-indigo-950/40 border border-slate-200 dark:border-slate-700 rounded-lg cursor-pointer transition-all space-y-2 group"
+                  className="p-3 bg-slate-950 hover:bg-slate-800/60 border border-slate-800 rounded-xl cursor-pointer transition-all space-y-2 group"
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="font-semibold text-slate-900 dark:text-white text-xs group-hover:text-indigo-600 transition-colors">
+                      <h4 className="font-bold text-white text-xs group-hover:text-emerald-400 transition-colors">
                         {lead.name}
                       </h4>
-                      <p className="text-[11px] text-slate-500">
-                        {lead.category} • {lead.city} - {lead.state}
+                      <p className="text-[11px] text-slate-400">
+                        {lead.category} • {lead.city}
                       </p>
                     </div>
-                    <span className="bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 font-extrabold text-[11px] px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-800">
+                    <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 font-mono font-bold text-[10px] px-2 py-0.5 rounded-full">
                       Score {lead.score}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800">
                     <span>{lead.reviewsCount} avaliações ({lead.rating}★)</span>
-                    <span className="text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
-                      Abrir <ArrowUpRight size={12} />
+                    <span className="text-emerald-400 font-semibold flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
+                      Analisar <ArrowUpRight size={12} />
                     </span>
                   </div>
                 </div>
@@ -298,17 +296,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ leads, onSelectLea
           </div>
 
           <button
-            onClick={() => onNavigateTab('finder')}
-            className="w-full py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5"
+            onClick={() => onNavigateTab('prospect')}
+            className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold rounded-xl transition-colors flex items-center justify-center gap-1.5"
           >
-            <Zap size={14} className="text-amber-500" /> Buscar Mais Empresas na Região
+            <Zap size={14} className="text-amber-400" /> Buscar Mais Empresas na Região
           </button>
           
           <button
             onClick={() => onNavigateTab('rank-tracker')}
-            className="w-full py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-950/70 text-rose-700 dark:text-rose-300 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 border border-rose-200 dark:border-rose-800"
+            className="w-full py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-semibold rounded-xl transition-colors flex items-center justify-center gap-1.5"
           >
-            <MapPin size={14} className="text-rose-500" /> Abrir Rank Tracker Local
+            <MapPin size={14} /> Abrir Rank Tracker Local
           </button>
         </div>
       </div>

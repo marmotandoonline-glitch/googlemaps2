@@ -141,22 +141,21 @@ export default function App() {
   // Layout / Navigation
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
-      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-xs">
+      <header className="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-extrabold text-xl shadow-md">P</div>
+            <div className="w-9 h-9 bg-emerald-500 rounded-lg flex items-center justify-center text-slate-950 font-black text-lg tracking-wider shadow-md shadow-emerald-500/20">P</div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white">PerfilPro</span>
-                <span className="text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800">
+                <span className="font-extrabold text-sm tracking-tight text-white">PerfilPro</span>
+                <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">
                   Agência GBP
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 font-medium hidden sm:block">Otimização de Perfis do Google Meu Negócio</p>
             </div>
           </div>
 
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden xl:flex items-center gap-1 bg-slate-950/60 p-1 rounded-xl border border-slate-800/80">
             {[
               { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
               { to: '/prospect', label: 'Lead Finder', icon: Search },
@@ -173,19 +172,23 @@ export default function App() {
                   key={tab.to}
                   to={tab.to}
                   className={({ isActive }) =>
-                    `px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors ${
+                    `px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
                       isActive
-                        ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300'
-                        : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800'
+                        ? 'bg-slate-800 text-white shadow-sm border border-slate-700/50'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800/40'
                     }`
                   }
                 >
-                  <IconComp size={15} />
-                  <span>{tab.label}</span>
-                  {tab.badge !== undefined && (
-                    <span className="text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-1.5 py-0.2 rounded-full">
-                      {tab.badge}
-                    </span>
+                  {({ isActive }) => (
+                    <>
+                      <IconComp size={14} className={isActive ? 'text-emerald-400' : 'text-slate-400'} />
+                      <span>{tab.label}</span>
+                      {tab.badge !== undefined && (
+                        <span className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.2 rounded-full font-mono">
+                          {tab.badge}
+                        </span>
+                      )}
+                    </>
                   )}
                 </NavLink>
               );
@@ -193,22 +196,15 @@ export default function App() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <div className="text-xs text-slate-600 dark:text-slate-300 mr-2">{user?.name || user?.email}</div>
-            <button onClick={logout} className="text-xs px-3 py-1 bg-rose-100 text-rose-700 rounded">
-              Logout
-            </button>
-            <button
-              onClick={() => setIsDarkMode((s) => !s)}
-              className="p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              title="Alternar Modo Escuro"
-            >
-              {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+            <span className="text-xs text-slate-400 hidden sm:inline font-mono">{user?.name || user?.email}</span>
+            <button onClick={logout} className="text-xs px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors border border-slate-700">
+              Sair
             </button>
             <NavLink
               to="/portal"
-              className="py-1.5 px-3 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold text-xs rounded-lg transition-all shadow-sm flex items-center gap-2"
+              className="py-1.5 px-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition-all shadow-sm shadow-emerald-500/10 flex items-center gap-1.5"
             >
-              <Globe size={14} className="text-emerald-400" /> Portal do Cliente
+              <Globe size={13} /> Portal
             </NavLink>
           </div>
         </div>
