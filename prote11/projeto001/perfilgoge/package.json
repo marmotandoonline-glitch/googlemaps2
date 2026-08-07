@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx src/server/index.ts",
     "build": "npm install --include=dev && npx prisma generate && vite build && tsc --project tsconfig.json",
-    "start": "npx prisma migrate deploy --schema=prisma/schema.prisma && npx tsx src/server/index.ts",
+    "start": "sh scripts/start-production.sh",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
     "prisma:generate": "prisma generate --schema=prisma/schema.prisma",
