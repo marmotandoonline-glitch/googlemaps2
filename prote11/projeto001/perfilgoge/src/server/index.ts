@@ -15,6 +15,7 @@ import fs from 'fs';
 import { ensureProductionSchema } from './lib/ensureSchema';
 import { startWhatsAppQueueWorker } from './services/whatsappQueueService';
 import { startN8nWebhookWorker } from './services/n8nWebhookService';
+import { startFollowupWorker } from './services/followupService';
 
 // O worker BullMQ só pode ser carregado com Redis padrão. Upstash é detectado
 // antes da importação porque esta versão do BullMQ encerra o processo no boot.
@@ -129,6 +130,7 @@ async function startServer() {
     startWhatsAppQueueWorker();
     console.log('📤 WhatsApp queue worker enabled with approval and throttling');
     startN8nWebhookWorker();
+    startFollowupWorker();
   });
 }
 
