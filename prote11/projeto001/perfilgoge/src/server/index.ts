@@ -116,14 +116,9 @@ if (fs.existsSync(staticPath)) {
 }
 
 async function startServer() {
-  try {
-    await ensureProductionSchema();
-    console.log('✅ Production schema compatibility check completed');
-  } catch (error) {
-    console.error('❌ Production schema check failed:', error);
-    process.exit(1);
-  }
-
+  // O health endpoint não deve depender de DDL de compatibilidade em bancos legados.
+  // As migrações já são executadas pelo script de produção; esta checagem é apenas
+  // uma salvaguarda para instalações antigas e não pode bloquear o boot no Render.
   app.listen(PORT, () => {
     console.log(`⚡ PerfilPro server listening on port ${PORT}`);
     console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -132,6 +127,18 @@ async function startServer() {
     startN8nWebhookWorker();
     startFollowupWorker();
   });
+
+  const schemaTimeout = new Promise<never>((_, reject) => {
+    setTimeout(() => reject(new Error('production schema compatibility check timed out')), 15000);
+  });
+  try {
+    await Promise.race([ensureProductionSchema(), schemaTimeout]);
+    console.log('✅ Production schema compatibility check completed');
+  } catch (error) {
+    // Não encerrar o processo depois de abrir a porta: o erro fica observável
+    // para correção sem colocar o serviço em loop de restart.
+    console.error('⚠️ Production schema compatibility check failed:', error);
+  }
 }
 
 void startServer();
