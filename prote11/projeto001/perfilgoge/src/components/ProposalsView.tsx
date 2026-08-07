@@ -8,6 +8,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { Lead } from '../types';
+import { useAuth } from '../auth/AuthProvider';
 
 interface ProposalsViewProps {
   leads: Lead[];
@@ -42,6 +43,14 @@ function parseProposalVideos(value?: string): ProposalVideos {
 
 function serializeProposalVideos(videos: ProposalVideos): string {
   return JSON.stringify(videos);
+}
+
+function stableMessageKey(leadId: string, text: string): string {
+  let hash = 0;
+  for (let index = 0; index < text.length; index += 1) {
+    hash = ((hash << 5) - hash + text.charCodeAt(index)) | 0;
+  }
+  return `proposal-${leadId}-${Math.abs(hash)}`;
 }
 
 function getBusinessLabel(lead: Lead): string {
@@ -97,10 +106,14 @@ export const ProposalsView: React.FC<ProposalsViewProps> = ({
   onSelectLead,
   onUpdateProposalMsg,
 }) => {
+  const { apiFetch } = useAuth();
   const currentLead = leads.find((lead) => lead.id === selectedLead?.id) || leads[0];
   const [videos, setVideos] = useState<ProposalVideos>(() => parseProposalVideos(currentLead?.videoUrl));
   const [copied, setCopied] = useState(false);
   const [message, setMessage] = useState(currentLead?.customProposalMsg || (currentLead ? buildPersonalizedMessage(currentLead, videos) : ''));
+  const [queueKey, setQueueKey] = useState<string | null>(null);
+  const [queueStatus, setQueueStatus] = useState<string | null>(null);
+  const [queueLoading, setQueueLoading] = useState(false);
 
   React.useEffect(() => {
     if (currentLead) {
@@ -130,13 +143,42 @@ export const ProposalsView: React.FC<ProposalsViewProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleOpenWhatsApp = () => {
-    if (!currentLead) return;
-    const phoneDigits = (currentLead.phone || '').replace(/\D/g, '');
-    if (!phoneDigits) return;
-    const cleanPhone = phoneDigits.startsWith('55') ? phoneDigits : `55${phoneDigits}`;
-    persistProposal();
-    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+  const handleQueueWhatsApp = async () => {
+    if (!currentLead || !currentLead.phone || !message.trim()) return;
+    setQueueLoading(true);
+    setQueueStatus(null);
+    try {
+      const idempotencyKey = stableMessageKey(currentLead.id, message);
+      persistProposal();
+      const response = await apiFetch('/api/whatsapp/queue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idempotencyKey, phone: currentLead.phone, text: message, leadId: currentLead.id }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Não foi possível enfileirar a proposta');
+      setQueueKey(idempotencyKey);
+      setQueueStatus(data.attempt?.status === 'approved' ? 'Aguardando envio' : 'Pendente de aprovação');
+    } catch (error: any) {
+      setQueueStatus(error?.message || 'Erro ao enfileirar proposta');
+    } finally {
+      setQueueLoading(false);
+    }
+  };
+
+  const handleApproveWhatsApp = async () => {
+    if (!queueKey) return;
+    setQueueLoading(true);
+    try {
+      const response = await apiFetch(`/api/whatsapp/attempts/${encodeURIComponent(queueKey)}/approve`, { method: 'POST' });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Não foi possível aprovar a proposta');
+      setQueueStatus('Aprovada e agendada com throttling');
+    } catch (error: any) {
+      setQueueStatus(error?.message || 'Erro ao aprovar proposta');
+    } finally {
+      setQueueLoading(false);
+    }
   };
 
   if (!currentLead) {
@@ -224,22 +266,32 @@ export const ProposalsView: React.FC<ProposalsViewProps> = ({
             />
           </div>
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex flex-wrap gap-3 pt-2">
             <button
               onClick={handleCopy}
-              className="py-2.5 px-4 bg-white border border-[#E2E2EE] hover:bg-[#ECEDF7]/50 text-[#16162B] font-medium text-xs rounded-full transition-colors flex items-center justify-center gap-1.5 flex-1 shadow-2xs"
+              className="py-2.5 px-4 bg-white border border-[#E2E2EE] hover:bg-[#ECEDF7]/50 text-[#16162B] font-medium text-xs rounded-full transition-colors flex items-center justify-center gap-1.5 flex-1"
             >
               {copied ? <Check size={14} className="text-[#1F9254]" /> : <Copy size={14} />}
               {copied ? 'Copiado!' : 'Copiar texto'}
             </button>
             <button
-              onClick={handleOpenWhatsApp}
-              disabled={!currentLead.phone}
+              onClick={handleQueueWhatsApp}
+              disabled={!currentLead.phone || queueLoading}
               className="py-2.5 px-4 bg-[#5B4FE9] hover:bg-[#4C3FDB] disabled:bg-[#B7B7C8] text-white font-medium text-xs rounded-full transition-all shadow-xs flex items-center justify-center gap-1.5 flex-1"
             >
-              <Send size={14} /> {currentLead.phone ? 'Abrir WhatsApp Web' : 'Cadastre o telefone'}
+              <Send size={14} /> {queueLoading ? 'Processando...' : currentLead.phone ? 'Enviar para fila' : 'Cadastre o telefone'}
             </button>
+            {queueKey && (
+              <button
+                onClick={handleApproveWhatsApp}
+                disabled={queueLoading || queueStatus === 'Aprovada e agendada com throttling'}
+                className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-medium text-xs rounded-full transition-all shadow-xs"
+              >
+                Aprovar e agendar envio seguro
+              </button>
+            )}
           </div>
+          {queueStatus && <p className="text-[11px] text-slate-500">Status da fila: {queueStatus}</p>}
         </div>
 
         <div className="bg-[#16162B] p-6 rounded-[20px] border border-[#2B2B48] flex flex-col items-center justify-center space-y-4">

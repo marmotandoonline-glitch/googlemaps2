@@ -13,6 +13,7 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import { ensureProductionSchema } from './lib/ensureSchema';
+import { startWhatsAppQueueWorker } from './services/whatsappQueueService';
 
 // O worker BullMQ só pode ser carregado com Redis padrão. Upstash é detectado
 // antes da importação porque esta versão do BullMQ encerra o processo no boot.
@@ -124,6 +125,8 @@ async function startServer() {
   app.listen(PORT, () => {
     console.log(`⚡ PerfilPro server listening on port ${PORT}`);
     console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
+    startWhatsAppQueueWorker();
+    console.log('📤 WhatsApp queue worker enabled with approval and throttling');
   });
 }
 
