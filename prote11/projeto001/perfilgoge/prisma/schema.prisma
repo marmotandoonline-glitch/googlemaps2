@@ -65,6 +65,8 @@ model Lead {
   financialExplanation String?
   clientPortalToken    String?   @unique
   clientPortalData     Json?
+  videoUrl             String?
+  customProposalMsg    String?
   agency               Agency?   @relation(fields: [agencyId], references: [id])
   agencyId             String?
   createdAt            DateTime  @default(now())
