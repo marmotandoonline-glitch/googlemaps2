@@ -106,6 +106,25 @@ export async function createLead(req: Request, res: Response) {
   res.status(201).json(newLead);
 }
 
+async function fetchJsonWithRetry(url: string, init: any, timeoutMs: number, attempts = 2): Promise<any> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(url, { ...init, signal: controller.signal });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      lastError = error;
+      if (attempt + 1 < attempts) await new Promise((resolve) => setTimeout(resolve, 400 * (attempt + 1)));
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error('Falha de rede');
+}
+
 // POST /api/leads/search — Free search using OpenStreetMap Overpass API (no credit card required)
 export async function searchLeads(req: Request, res: Response) {
   const { niche, city, neighborhood, state } = req.body || {};
@@ -155,22 +174,13 @@ export async function searchLeads(req: Request, res: Response) {
   let json: any = null;
   let lastError = 'Nenhum servidor Overpass respondeu.';
   const overpassRequests = overpassEndpoints.map(async (url) => {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        body: `data=${encodeURIComponent(overpassQuery)}`,
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        signal: controller.signal,
-      });
-      if (!response.ok) throw new Error(`Servidor Overpass respondeu HTTP ${response.status}`);
-      const candidate = await response.json() as any;
-      if (!candidate || !Array.isArray(candidate.elements)) throw new Error('Resposta inválida do servidor Overpass.');
-      return candidate;
-    } finally {
-      clearTimeout(timeout);
-    }
+    const candidate = await fetchJsonWithRetry(url, {
+      method: 'POST',
+      body: `data=${encodeURIComponent(overpassQuery)}`,
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'PerfilPro-LeadFinder/1.0' },
+    }, 10000, 2);
+    if (!candidate || !Array.isArray(candidate.elements)) throw new Error('Resposta inválida do servidor Overpass.');
+    return candidate;
   });
   try {
     // Usa o primeiro servidor saudável, sem esperar os demais em sequência.
@@ -356,7 +366,7 @@ export async function searchLeads(req: Request, res: Response) {
   // Não eliminar leads sem telefone ou site: esses campos são justamente
   // oportunidades de enriquecimento e não devem transformar uma busca válida
   // em "nenhum resultado". Ordenamos os melhores candidatos pelo score.
-  const results = mapped
+  const results = Array.from(new Map(mapped.map((item: any) => [item.placeId, item])).values())
     .sort((a: any, b: any) => (b.calculatedScore || 0) - (a.calculatedScore || 0))
     .slice(0, 100);
 
