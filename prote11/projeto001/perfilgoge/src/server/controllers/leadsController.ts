@@ -48,6 +48,17 @@ export async function createLead(req: Request, res: Response) {
   }
 
   const financial = calculateFinancialLeakage(body.category || 'Serviços', body.city || 'São Paulo', 12);
+  const diagnostic = scoreLead({
+    rating: Number(body.rating || 0),
+    reviewsCount: Number(body.reviewsCount || 0),
+    photosCount: Number(body.photosCount || 0),
+    hasWebsite: Boolean(body.website),
+    hasDescription: Boolean(body.description),
+    hasHours: Boolean(body.hasHours),
+    hasServices: body.hasServices !== undefined ? Boolean(body.hasServices) : true,
+    hasProducts: Boolean(body.hasProducts),
+  });
+  const scoreVersion = 'health-v1';
 
   const newLead = await prisma.lead.create({
     data: {
@@ -66,9 +77,13 @@ export async function createLead(req: Request, res: Response) {
       description: body.description || '',
       photosCount: body.photosCount || 0,
       hasHours: Boolean(body.hasHours),
-      hasServices: Boolean(body.hasServices),
+      hasServices: body.hasServices !== undefined ? Boolean(body.hasServices) : true,
       hasProducts: Boolean(body.hasProducts),
-      score: body.score || 0,
+      score: diagnostic.totalScore,
+      scoreVersion,
+      scoreDetails: diagnostic as any,
+      scoreCalculatedAt: new Date(),
+      diagnostic: diagnostic as any,
       stage: 'novo',
       dealValue: body.dealValue || 1200,
       estimatedLoss: financial.estimatedMonthlyLoss,
@@ -313,10 +328,10 @@ export async function searchLeads(req: Request, res: Response) {
       placeId: `osm-${item.type}-${item.id}`,
       rating: Number(tags.stars || 0),
       reviewsCount: Number(tags["reviews_count"] || 0),
-      address: [tags['addr:street'], tags['addr:housenumber'], tags['addr:suburb']].filter(Boolean).join(', ') || `${cityName} - SP`,
+      address: [tags['addr:street'], tags['addr:housenumber'], tags['addr:suburb']].filter(Boolean).join(', ') || `${cityName}${state ? ` - ${state}` : ''}`,
       neighborhood: neighborhood || tags['addr:suburb'] || 'Centro',
       city: cityName,
-      state: state || 'SP',
+      state: state || '',
       description: tags.description || `Estabelecimento comercial localizado em ${cityName}.`,
       photosCount,
       hasHours: Boolean(tags.opening_hours),
@@ -442,6 +457,27 @@ export async function updateLead(req: Request, res: Response) {
 
   if (newPortalToken) {
     cleanData.clientPortalToken = newPortalToken;
+  }
+
+  const scoreFieldsChanged = ['rating', 'reviewsCount', 'photosCount', 'website', 'description', 'hasHours', 'hasServices', 'hasProducts']
+    .some((field) => Object.prototype.hasOwnProperty.call(cleanData, field));
+  if (scoreFieldsChanged) {
+    const next = { ...lead, ...cleanData } as any;
+    const refreshedDiagnostic = scoreLead({
+      rating: Number(next.rating || 0),
+      reviewsCount: Number(next.reviewsCount || 0),
+      photosCount: Number(next.photosCount || 0),
+      hasWebsite: Boolean(next.website),
+      hasDescription: Boolean(next.description),
+      hasHours: Boolean(next.hasHours),
+      hasServices: Boolean(next.hasServices),
+      hasProducts: Boolean(next.hasProducts),
+    });
+    cleanData.score = refreshedDiagnostic.totalScore;
+    cleanData.scoreVersion = 'health-v1';
+    cleanData.scoreDetails = refreshedDiagnostic as any;
+    cleanData.scoreCalculatedAt = new Date();
+    cleanData.diagnostic = refreshedDiagnostic as any;
   }
 
   const updated = await prisma.lead.update({ where: { id }, data: cleanData });

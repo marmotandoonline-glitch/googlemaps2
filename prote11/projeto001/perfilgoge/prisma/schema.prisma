@@ -13,8 +13,8 @@ model Agency {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users     User[]
-  leads     Lead[]
+  users User[]
+  leads Lead[]
 }
 
 model User {
@@ -35,42 +35,120 @@ enum UserRole {
 }
 
 model Lead {
-  id                String   @id @default(cuid())
-  name              String
-  category          String
-  phone             String?
-  website           String?
-  profileUrl        String?
-  placeId           String?  @unique
-  rating            Float?   
-  reviewsCount      Int?     
-  address           String?
-  neighborhood      String?
-  city              String?
-  state             String?
-  description       String?
-  photosCount       Int?     
-  hasHours          Boolean  @default(false)
-  hasServices       Boolean  @default(false)
-  hasProducts       Boolean  @default(false)
-  score             Int?     
-  stage             String   @default("novo")
-  dealValue         Int?     
-  diagnostic          Json?
-  aiContentMap        Json?
-  estimatedLoss       Int?
+  id                   String    @id @default(cuid())
+  name                 String
+  category             String
+  phone                String?
+  website              String?
+  profileUrl           String?
+  placeId              String?   @unique
+  rating               Float?
+  reviewsCount         Int?
+  address              String?
+  neighborhood         String?
+  city                 String?
+  state                String?
+  description          String?
+  photosCount          Int?
+  hasHours             Boolean   @default(false)
+  hasServices          Boolean   @default(false)
+  hasProducts          Boolean   @default(false)
+  score                Int?
+  scoreVersion         String?
+  scoreDetails         Json?
+  scoreCalculatedAt    DateTime?
+  stage                String    @default("novo")
+  dealValue            Int?
+  diagnostic           Json?
+  aiContentMap         Json?
+  estimatedLoss        Int?
   financialExplanation String?
-  clientPortalToken String?  @unique
-  clientPortalData  Json?
-  agency            Agency?  @relation(fields: [agencyId], references: [id])
-  agencyId          String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  clientPortalToken    String?   @unique
+  clientPortalData     Json?
+  agency               Agency?   @relation(fields: [agencyId], references: [id])
+  agencyId             String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
-  notes             LeadNote[]
-  history           LeadHistory[]
-  files             File[]
-  aiContents        AIContent[]
+  notes           LeadNote[]
+  history         LeadHistory[]
+  files           File[]
+  aiContents      AIContent[]
+  consents        LeadConsent[]
+  tasks           LeadTask[]
+  messageAttempts WhatsAppAttempt[]
+  events          DomainEvent[]
+}
+
+model LeadConsent {
+  id        String    @id @default(cuid())
+  lead      Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  leadId    String
+  channel   String
+  purpose   String
+  status    String    @default("pending")
+  source    String?
+  grantedAt DateTime?
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([leadId, channel, purpose])
+}
+
+model LeadTask {
+  id          String    @id @default(cuid())
+  lead        Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  leadId      String
+  type        String
+  status      String    @default("pending")
+  title       String
+  description String?
+  dueAt       DateTime
+  completedAt DateTime?
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, dueAt])
+  @@index([leadId, type, status])
+}
+
+model WhatsAppAttempt {
+  idempotencyKey String    @id
+  lead           Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  leadId         String?
+  phone          String
+  text           String
+  status         String    @default("pending")
+  approvedAt     DateTime?
+  scheduledAt    DateTime
+  sentAt         DateTime?
+  failedAt       DateTime?
+  error          String?
+  providerId     String?
+  attempts       Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([status, scheduledAt])
+  @@index([leadId, createdAt])
+}
+
+model DomainEvent {
+  id          String    @id @default(cuid())
+  lead        Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  leadId      String?
+  type        String
+  status      String    @default("pending")
+  payload     Json
+  occurredAt  DateTime  @default(now())
+  processedAt DateTime?
+  attempts    Int       @default(0)
+  error       String?
+
+  @@index([status, occurredAt])
+  @@index([leadId, occurredAt])
 }
 
 model LeadNote {
@@ -122,7 +200,7 @@ model AIContent {
 
 model PortalToken {
   id        String   @id @default(cuid())
-  leadId    String?  
+  leadId    String?
   tokenHash String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
