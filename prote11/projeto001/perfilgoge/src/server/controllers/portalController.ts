@@ -73,6 +73,26 @@ export async function completeUpload(req: Request, res: Response) {
     } as any,
   });
 
+  await prisma.leadTask.create({
+    data: {
+      leadId,
+      type: 'gbp_manager_invite',
+      status: 'pending',
+      title: 'Convidar gerente no Google Business Profile',
+      description: 'Revisar os dados recebidos no Portal e enviar o convite de gerente no GBP somente após confirmação do operador e do cliente.',
+      dueAt: new Date(),
+      metadata: { requiresApproval: true, source: 'client_portal', portalData },
+    },
+  });
+  await prisma.domainEvent.create({
+    data: {
+      leadId,
+      type: 'portal_completed',
+      payload: { nextAction: 'gbp_manager_invite', stage: 'onboarding' },
+      status: 'pending',
+    },
+  });
+
   // Record history
   await prisma.leadHistory.create({
     data: {
