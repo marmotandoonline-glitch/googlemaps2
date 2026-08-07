@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS "LeadConsent" (
   CONSTRAINT "LeadConsent_pkey" PRIMARY KEY ("id")
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS "LeadConsent_leadId_channel_purpose_key"
+  ON "LeadConsent"("leadId", "channel", "purpose");
 CREATE INDEX IF NOT EXISTS "LeadConsent_leadId_channel_purpose_idx"
   ON "LeadConsent"("leadId", "channel", "purpose");
 

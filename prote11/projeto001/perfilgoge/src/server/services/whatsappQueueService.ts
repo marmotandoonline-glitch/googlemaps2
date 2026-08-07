@@ -18,7 +18,19 @@ export async function enqueueWhatsAppAttempt(params: {
   if (!idempotencyKey) throw new Error('idempotencyKey é obrigatório');
   if (!params.phone?.trim() || !params.text?.trim()) throw new Error('phone e text são obrigatórios');
 
-  return prisma.whatsAppAttempt.upsert({
+  if (params.leadId) {
+    const consent = await prisma.leadConsent.findUnique({
+      where: { leadId_channel_purpose: { leadId: params.leadId, channel: 'whatsapp', purpose: 'prospecting' } },
+    });
+    if (consent?.status === 'revoked') throw new Error('Contato revogado para prospecção via WhatsApp');
+    await prisma.leadConsent.upsert({
+      where: { leadId_channel_purpose: { leadId: params.leadId, channel: 'whatsapp', purpose: 'prospecting' } },
+      create: { leadId: params.leadId, channel: 'whatsapp', purpose: 'prospecting', status: 'pending', source: 'operator_approval' },
+      update: {},
+    });
+  }
+
+  const attempt = await prisma.whatsAppAttempt.upsert({
     where: { idempotencyKey },
     create: {
       idempotencyKey,
@@ -30,15 +42,27 @@ export async function enqueueWhatsAppAttempt(params: {
     },
     update: {},
   });
+  if (params.leadId) {
+    await prisma.domainEvent.create({
+      data: { leadId: params.leadId, type: 'whatsapp_queued', payload: { idempotencyKey }, status: 'pending' },
+    });
+  }
+  return attempt;
 }
 
 export async function approveWhatsAppAttempt(idempotencyKey: string) {
   const attempt = await prisma.whatsAppAttempt.findUnique({ where: { idempotencyKey } });
   if (!attempt) throw new Error('Tentativa de WhatsApp não encontrada');
+  if (attempt.leadId) {
+    const consent = await prisma.leadConsent.findUnique({
+      where: { leadId_channel_purpose: { leadId: attempt.leadId, channel: 'whatsapp', purpose: 'prospecting' } },
+    });
+    if (consent?.status === 'revoked') throw new Error('Contato revogado para prospecção via WhatsApp');
+  }
   if (attempt.status === 'sent') return attempt;
   if (attempt.status === 'cancelled') throw new Error('Tentativa cancelada não pode ser aprovada');
 
-  return prisma.whatsAppAttempt.update({
+  const approved = await prisma.whatsAppAttempt.update({
     where: { idempotencyKey },
     data: {
       status: 'approved',
@@ -47,6 +71,12 @@ export async function approveWhatsAppAttempt(idempotencyKey: string) {
       error: null,
     },
   });
+  if (approved.leadId) {
+    await prisma.domainEvent.create({
+      data: { leadId: approved.leadId, type: 'whatsapp_approved', payload: { idempotencyKey }, status: 'pending' },
+    });
+  }
+  return approved;
 }
 
 export async function cancelWhatsAppAttempt(idempotencyKey: string) {

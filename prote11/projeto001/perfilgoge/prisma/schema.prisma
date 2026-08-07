@@ -93,6 +93,7 @@ model LeadConsent {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
+  @@unique([leadId, channel, purpose])
   @@index([leadId, channel, purpose])
 }
 
